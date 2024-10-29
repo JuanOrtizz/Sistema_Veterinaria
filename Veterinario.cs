@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static Factura;
 
-public class Veterinario : IRegistrosVeterinario
+public class Veterinario : IRegistrosVeterinario, IFacturacion, IConsultarInfo, IModificarInfo
 {
     private string usuario;
     private string contraseña; // despues la vamos a hashear en el futuro.
@@ -295,6 +295,49 @@ public class Veterinario : IRegistrosVeterinario
         // Cuando veamos la estructura de datos va a imprimirla.
     }
 
+    public string CambiarPrecioServicio()
+    {
+        int opcionMS = 0;
+        do
+        {
+            Console.WriteLine("---Selecciona el servicio a modificar su precio---");
+            Console.WriteLine("1-Revision");
+            Console.WriteLine("2-Cirugia");
+            Console.WriteLine("3-Control Completo");
+            Console.WriteLine("4-Vacunacion");
+            Console.WriteLine("5-Laboratorio");
+            Console.WriteLine("6-Volver");
+            Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+            opcionMS = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine();
+            switch (opcionMS)
+            {
+                case 1:
+                    // cuando vea diccionarios va a funcionar esto
+                    break;
+                case 2:
+                    // cuando vea diccionarios va a funcionar esto
+                    break;
+                case 3:
+                    // cuando vea diccionarios va a funcionar esto
+                    break;
+                case 4:
+                    // cuando vea diccionarios va a funcionar esto
+                    break;
+                case 5:
+                    // cuando vea diccionarios va a funcionar esto
+                    break;
+                case 6:
+                    // cuando vea diccionarios va a funcionar esto
+                    break;
+                default:
+                    Console.WriteLine("Opcion no valida. Ingresa una opcion valida\n");
+                    break;
+            }
+        } while (opcionMS != 6);
+        return "Volviendo...\n";
+    }
+
     //Metodos para Consultar datos
     public string ConsultarInfoCliente()
     {
@@ -421,17 +464,28 @@ public class Veterinario : IRegistrosVeterinario
         } while (opcion1 != 1 && opcion1 != 2);
     }
 
+    //Metodos de modificacion de informacion
+    public string ModificarInfoCliente()
+    {
+        // aca va a realizar una busqueda de un cliente en una coleccion
+        // y va a tener la posiblidad de cambiar la informacion de un cliente
+        return "";
+    }
+
+    public string ModificarInfoAnimal()
+    {
+        // aca va a realizar una busqueda de un animal en una coleccion
+        // y va a tener la posiiblidad de cambiar la informacion de un animal
+        return "";
+    }
+
     //Metodos de veterinario para su objeto propio
     public string ModificarInformacion(Veterinario veterinario)
     {
         int opcionMI = 0;
         int opcionInd = 0;
-        bool opcionMod = false;
-        bool opcionModUsuario = false;
-        bool opcionModContraseña = false;
-        bool opcionModNombre = false;
-        bool opcionModApellido = false;
-        bool opcionModTelefono = false;
+        bool opcionModificacion = false;
+ 
         do
         {
             Console.WriteLine("---Selecciona la informacion que quieres modificar---");
@@ -444,7 +498,7 @@ public class Veterinario : IRegistrosVeterinario
             switch (opcionMI)
             {
                 case 1:
-                    while (opcionModUsuario == false)
+                    while (opcionModificacion == false)
                     {
                         Console.Write("Coloca tu nuevo nombre de usuario: ");
                         string nombUsuTemp = Console.ReadLine();
@@ -456,10 +510,11 @@ public class Veterinario : IRegistrosVeterinario
                         {
                             veterinario.Usuario = nombUsuTemp;
                             Console.WriteLine("Tu nombre de usuario ahora es: " + veterinario.Usuario + "\n");
-                            opcionModUsuario = true;
+                            opcionModificacion = true;
                         }
                     }
-                    while (opcionModContraseña == false)
+                    opcionModificacion = false;
+                    while (opcionModificacion == false)
                     {
                         Console.Write("Coloca tu nueva contraseña: ");
                         string contTemp = Console.ReadLine();
@@ -471,10 +526,11 @@ public class Veterinario : IRegistrosVeterinario
                         {
                             veterinario.Contraseña = contTemp;
                             Console.WriteLine("Tu contraseña ahora es: " + veterinario.Contraseña + "\n");
-                            opcionModContraseña = true;
+                            opcionModificacion = true;
                         }
                     }
-                    while (opcionModNombre == false)
+                    opcionModificacion = false;
+                    while (opcionModificacion == false)
                     {
                         Console.Write("Coloca tu nuevo nombre: ");
                         string nombTemp = Console.ReadLine();
@@ -486,10 +542,11 @@ public class Veterinario : IRegistrosVeterinario
                         {
                             veterinario.Nombre = nombTemp;
                             Console.WriteLine("Tu nombre ahora es: " + veterinario.Nombre + "\n");
-                            opcionModNombre = true;
+                            opcionModificacion = true;
                         }
                     }
-                    while (opcionModApellido == false)
+                    opcionModificacion = false;
+                    while (opcionModificacion == false)
                     {
                         Console.Write("Coloca tu nuevo apellido: ");
                         string apeTemp = Console.ReadLine();
@@ -501,10 +558,11 @@ public class Veterinario : IRegistrosVeterinario
                         {
                             veterinario.Apellido = apeTemp;
                             Console.WriteLine("Tu apellido ahora es: " + veterinario.Apellido + "\n");
-                            opcionModApellido = true;
+                            opcionModificacion = true;
                         }
                     }
-                    while (opcionModTelefono == false)
+                    opcionModificacion = false;
+                    while (opcionModificacion == false)
                     {
                         Console.Write("Coloca tu nuevo numero de telefono: ");
                         string numTelTemp = Console.ReadLine();
@@ -516,9 +574,10 @@ public class Veterinario : IRegistrosVeterinario
                         {
                             veterinario.NroTelefono = numTelTemp;
                             Console.WriteLine("Tu numero de telefono ahora es: " + veterinario.NroTelefono + "\n");
-                            opcionModTelefono = true;
+                            opcionModificacion = true;
                         }
                     }
+                    Console.WriteLine("Informacion actualizada con exito!\n");
                     break;
                 case 2:
                     do
@@ -546,7 +605,6 @@ public class Veterinario : IRegistrosVeterinario
                                 {
                                     veterinario.Usuario = nombUsuTemp;
                                     Console.WriteLine("Tu nombre de usuario ahora es: " + veterinario.Usuario + "\n");
-                                    opcionMod = true;
                                 }
                                 break;
                             case 2:
@@ -560,7 +618,6 @@ public class Veterinario : IRegistrosVeterinario
                                 {
                                     veterinario.Contraseña = contTemp;
                                     Console.WriteLine("Tu contraseña ahora es: " + veterinario.Contraseña + "\n");
-                                    opcionMod = true;
                                 }
                                 break;
                             case 3:
@@ -574,7 +631,6 @@ public class Veterinario : IRegistrosVeterinario
                                 {
                                     veterinario.Nombre = nombTemp;
                                     Console.WriteLine("Tu nombre ahora es: " + veterinario.Nombre + "\n");
-                                    opcionMod = true;
                                 }
                                 break;
                             case 4:
@@ -588,7 +644,6 @@ public class Veterinario : IRegistrosVeterinario
                                 {
                                     veterinario.Apellido = apeTemp;
                                     Console.WriteLine("Tu apellido ahora es: " + veterinario.Apellido + "\n");
-                                    opcionMod = true;
                                 }
                                 break;
                             case 5:
@@ -602,11 +657,10 @@ public class Veterinario : IRegistrosVeterinario
                                 {
                                     veterinario.NroTelefono = numTelTemp;
                                     Console.WriteLine("Tu numero de telefono ahora es: " + veterinario.NroTelefono + "\n");
-                                    opcionMod = true;
                                 }
                                 break;
                             case 6:
-                                opcionMod = true;
+                                Console.WriteLine("Volviendo...\n");
                                 break;
                             default:
                                 Console.WriteLine("Opcion no valida. Ingresa una opcion valida\n");
@@ -620,15 +674,6 @@ public class Veterinario : IRegistrosVeterinario
                     Console.WriteLine("Opcion no valida. Ingresa una opcion valida\n");
                     break;
             }
-            if (opcionMI == 2 && opcionInd == 6)
-            {
-                return "Volviendo...\n";
-            }
-            else if (opcionMI == 1 || opcionMI == 2)
-            {
-                return "Informacion actualizada con exito!\n";
-            }
-
         } while (opcionMI != 3);
         return "Volviendo...\n";
     }

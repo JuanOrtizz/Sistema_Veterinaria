@@ -31,7 +31,7 @@ public class Roedor : Animal
 
     public override string ToString()
     {
-        return base.ToString() + "\n Especie del Roedor: " + especie;
+        return base.ToString() + "\nEspecie del Roedor: " + especie;
     }
 }
 

@@ -21,9 +21,14 @@ public class Gato: Animal
         set { this.raza = value; }
     }
 
+    public void VerVacunas()
+    {
+        //va a tener un foreach para ver todas las vacunas del animal.
+    }
+
     public override string ToString()
     {
-        return base.ToString() + "\n Raza del Gato: " + raza; // despues tambien va a imprimir la lista con todas las vacunas
+        return base.ToString() + "\nRaza del Gato: " + raza; // despues tambien va a imprimir la lista con todas las vacunas
 
     }
 }

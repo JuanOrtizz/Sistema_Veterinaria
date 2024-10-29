@@ -65,39 +65,39 @@ public class Factura
         set { precio = value; }
     }
 
-    public override string ToString()
-    {
-        return "---Factura---" + "\n Numero de Factura: " + nroFactura + "\n Fecha de factura: " + fecha.ToString("dd/MM/yyyy")
-            + "\n Cliente: " + cliente.Nombre + ", " +cliente.Apellido + "\n Animal: " + animal.GetType() + ", " 
-            + animal.Nombre + "\n Servicio: " + servicio + "\n Precio: " + precio;
-    }
-
     public void CalcularPrecio(Servicios servicio)
     {
         switch (servicio)
         {
             case Servicios.Revision:
                 precio = 2000.00;
-            break;
+                break;
 
             case Servicios.Cirujia:
                 precio = 10000.00;
-            break;
+                break;
 
             case Servicios.ControlCompleto:
                 precio = 6000.00;
-            break;
+                break;
 
             case Servicios.Vacunacion:
                 precio = 4000.00;
-            break;
+                break;
 
             case Servicios.Laboratorio:
                 precio = 5000.00;
-            break;
-        }         
+                break;
+        }
     }
 
+    public void CambiarPrecioProducto() {// cuando implemente mapas o diccionarios voy a hacer este metodo}
 
+    public override string ToString()
+    {
+        return "---Factura---" + "\n Numero de Factura: " + nroFactura + "\n Fecha de factura: " + fecha.ToString("dd/MM/yyyy")
+            + "\n Cliente: " + cliente.Nombre + ", " +cliente.Apellido + "\n Animal: " + animal.GetType() + ", " 
+            + animal.Nombre + "\n Servicio: " + servicio + "\n Precio: " + precio;
+    }
 
 }

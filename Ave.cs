@@ -30,6 +30,6 @@ public class Ave : Animal
 
     public override string ToString()
     {
-        return base.ToString() + "\n Especie del Ave: " + especie;
+        return base.ToString() + "\nEspecie del Ave: " + especie;
     }
 }

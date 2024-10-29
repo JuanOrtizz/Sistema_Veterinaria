@@ -10,7 +10,5 @@ public interface IRegistrosVeterinario
     public string EliminarCliente();
     public string RegistrarAnimal();
     public string EliminarAnimal();
-    public string CrearFactura();
-    public string EliminarFactura();
 }
 
