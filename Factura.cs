@@ -91,7 +91,9 @@ public class Factura
         }
     }
 
-    public void CambiarPrecioProducto() {// cuando implemente mapas o diccionarios voy a hacer este metodo}
+    public void CambiarPrecioProducto() {
+        // cuando implemente mapas o diccionarios voy a hacer este metodo
+        }
 
     public override string ToString()
     {
