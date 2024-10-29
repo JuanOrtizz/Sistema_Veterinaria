@@ -56,12 +56,7 @@ public abstract class Animal: IHistorialAnimal
         set { this.sexo = value; }
     }
 
-    public override string ToString()
-    {
-        return "---Informacion del Animal---" + "\n Nombre: " + nombre + "\n Dueño: " + dueño.Nombre + ", " + dueño.Apellido +
-            "\n Fecha de Nacimiento: " + fecNac.ToString("dd/MM/yyyy") + "\n Peso en Kg: " + peso + "\n Sexo del animal: " + sexo; 
-    }
-
+    // Metodos para el historial de cada animal
     public void verHistorial()
     {
         //aca se va a implementar cuando tengamos lista.
@@ -70,6 +65,12 @@ public abstract class Animal: IHistorialAnimal
     public void actualizarHistorial()
     {
         //aca vamos a agregar una consulta cuando tengamos listas. 
+    }
+
+    public override string ToString()
+    {
+        return "---Informacion del Animal---" + "\nNombre: " + nombre + "\nDueño: " + dueño.Nombre + ", " + dueño.Apellido +
+            "\nFecha de Nacimiento: " + fecNac.ToString("dd/MM/yyyy") + "\nPeso en Kg: " + peso + "\nSexo del animal: " + sexo; 
     }
 }
 

@@ -261,7 +261,7 @@
                         {
                             case 1:
                                 Console.WriteLine("Hasta luego!");
-                                menu = true;
+                                menuSalir = true;
                                 Environment.Exit(0);
                                 break;
                             case 2:

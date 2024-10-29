@@ -44,9 +44,14 @@ public class Cliente
         set { this.numTelefono = value; }
     }
 
+    public void VerAnimales()
+    {
+        // aca va a ir un foreach para imprimir la lista completa de animal del cliente
+    }
+
     public override string ToString()
     {
-        return "\n---Informacion Cliente---" + "\n Nombre: " + nombre + "\n Apellido: " + apellido + "\n DNI:"+ dni + "\n Numero de Telefono: " + numTelefono;
-        // despues va a imprimir la lista con todos los animales que le pertenezcan
+        return "\n---Informacion Cliente---" + "\n Nombre: " + nombre + "\n Apellido: " + apellido + "\n DNI:"+ dni 
+            + "\n Numero de Telefono: " + numTelefono;
     }
 }
