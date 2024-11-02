@@ -8,6 +8,8 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 public class Factura
 {
+    public static int ultimoNumeroFactura = 0;// en el futuro se va a guardar en una BDD o archivo.txt
+
     private int nroFactura;
     private DateTime fecha;
     private Cliente? cliente; //permiten null temporalmente
@@ -25,14 +27,10 @@ public class Factura
         NoDefinido
     }
 
-    public Factura(int nroFactura, Cliente cliente, Animal animal, Servicios servicio)
+    public Factura()
     {
-        this.nroFactura = nroFactura;
-        fecha = DateTime.Now; // guarda la fecha y hora actual de cuando se creo la factura.
-        this.cliente = cliente;
-        this.animal = animal;
-        this.servicio = servicio;
-        CalcularPrecio(servicio);
+        nroFactura = ultimoNumeroFactura++;// incrementa en uno el ultimo numero de factura y lo asigna a nroFactura
+        fecha = DateTime.Now;// guarda la fecha y hora actual de cuando se creo la factura.
     }
 
     public int NroFactura
@@ -65,7 +63,7 @@ public class Factura
         set { precio = value; }
     }
 
-    public void CalcularPrecio(Servicios servicio)
+    public void CalcularPrecio(Servicios servicio)//metodo temporal ya que cuando se implemente un diccionario ya se van a asignar desde ahi
     {
         switch (servicio)
         {
@@ -94,6 +92,7 @@ public class Factura
     public void CambiarPrecioProducto() {
         // cuando implemente mapas o diccionarios voy a hacer este metodo
         }
+
 
     public override string ToString()
     {

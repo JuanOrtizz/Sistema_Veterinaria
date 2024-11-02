@@ -9,10 +9,10 @@ public class Cliente
     private string nombre;
     private string apellido;
     private int dni;
-    private string numTelefono;
+    private int numTelefono;
     private string? mascotas; // aca va a ir una lista en el futuro con todas las mascotas del cliente.
 
-    public Cliente(string nombre, string apellido, int dni, string numTelefono)
+    public Cliente(string nombre, string apellido, int dni, int numTelefono)
     { 
         this.nombre = nombre;
         this.apellido = apellido;
@@ -38,7 +38,7 @@ public class Cliente
         set { this.dni = value; }
     }
 
-    public string NumTelefono
+    public int NumTelefono
     {
         get { return numTelefono; }
         set { this.numTelefono = value; }

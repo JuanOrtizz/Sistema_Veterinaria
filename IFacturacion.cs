@@ -10,6 +10,5 @@ public interface IFacturacion
     public string EliminarFactura();
     public string ImprimirFactura();
     public void MostrarFacturas();
-
     public string CambiarPrecioServicio();
 }

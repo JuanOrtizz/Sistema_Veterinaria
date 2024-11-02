@@ -11,24 +11,16 @@ public class Veterinario : IRegistrosVeterinario, IFacturacion, IConsultarInfo, 
     private string contraseña; // despues la vamos a hashear en el futuro.
     private string nombre;
     private string apellido;
-    private string nroTelefono;
+    private int nroTelefono;
 
     //Constructor
-    public Veterinario()
+    public Veterinario(string usuario, string contraseña, string nombre, string apellido, int nroTelefono)
     {
-        Console.WriteLine("---Bienvenido al registro del sistema---");
-        Console.Write("Ingresa un nombre de usuario: ");
-        usuario = Console.ReadLine();
-        Console.Write("Ingresa una constraseña: ");
-        contraseña = Console.ReadLine();
-        Console.Write("Ingresa tu nombre: ");
-        nombre = Console.ReadLine();
-        Console.Write("Ingresa tu apellido: ");
-        apellido = Console.ReadLine();
-        Console.Write("Ingresa tu numero de telefono: ");
-        nroTelefono = Console.ReadLine();
-        Console.WriteLine();
-        Console.WriteLine("Te has registrado\n");
+        this.usuario = usuario;
+        this.contraseña = contraseña;
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.nroTelefono = nroTelefono;
     }
 
     //Getters y Setters
@@ -56,78 +48,378 @@ public class Veterinario : IRegistrosVeterinario, IFacturacion, IConsultarInfo, 
         set { apellido = value; }
     }
 
-    public string NroTelefono
+    public int NroTelefono
     {
         get { return nroTelefono; }
         set { nroTelefono = value; }
     }
 
     //Metodos de Registro y Eliminacion.
-    public string RegistrarCliente() //metodo de la interfaz
+    public string RegistrarCliente() //metodo de la interfaz IRegistrosVeterinario
     {
-        Console.WriteLine("---Registrar Cliente---");
-        Console.Write("Ingresa el nombre del cliente: ");
-        string nombreTemp = Console.ReadLine();
-        Console.Write("Ingresa el apellido del cliente: ");
-        string apellidoTemp = Console.ReadLine();
-        Console.Write("Ingresa el DNI del cliente: ");
-        int dniTemp = Convert.ToInt32(Console.ReadLine());
-        Console.Write("Ingresa el numero de telefono del cliente: ");
-        string nroTemp = Console.ReadLine();
+        Cliente cliente = null;
 
-        Cliente cliente = new Cliente(nombreTemp, apellidoTemp, dniTemp, nroTemp);
-        Console.WriteLine();
-        //se va a guardar en una lista en un futuro.
+        // variable para el do-while
+        bool boolRegistroCliente = false;
+        do
+        {
+            try
+            {
+                Console.WriteLine("---Registrar Cliente---");
+
+                // cargar datos del nombre del cliente
+                Console.Write("Ingresa el nombre del cliente: ");
+                string nombreTemp = Console.ReadLine().Trim();
+                if (string.IsNullOrEmpty(nombreTemp) || nombreTemp.Length < 2)
+                {
+                    throw new CamposCreacionIncorrectosException("El nombre no puede estar vacio y debe tener 2 o mas letras\n");
+                }
+                else if (!nombreTemp.All(char.IsLetter))
+                {
+                    throw new CamposCreacionIncorrectosException("El nombre debe contener solo letras\n");
+                }
+
+                // cargar datos del apellido del cliente
+                Console.Write("Ingresa el apellido del cliente: ");
+                string apellidoTemp = Console.ReadLine().Trim();
+                if (string.IsNullOrEmpty(apellidoTemp) || apellidoTemp.Length < 2)
+                {
+                    throw new CamposCreacionIncorrectosException("El apellido no puede estar vacio y debe tener 2 o mas letras\n");
+                }
+                else if (!apellidoTemp.All(char.IsLetter))
+                {
+                    throw new CamposCreacionIncorrectosException("El apellido debe contener solo letras\n");
+                }
+
+                // cargar datos del DNI del cliente
+                Console.Write("Ingresa el DNI del cliente: ");
+                string dniTemp = Console.ReadLine().Trim();
+                int dniNumerico;
+                if (string.IsNullOrEmpty(dniTemp) || dniTemp.Length != 8)
+                {
+                    throw new CamposCreacionIncorrectosException("El DNI no debe estar vacio y debe tener 8 numeros\n");
+                }
+                else if (!int.TryParse(dniTemp, out dniNumerico))
+                {
+                    throw new CamposCreacionIncorrectosException("El DNI debe contener unicamente numeros\n");
+                }
+
+                // cargar datos del telefono del cliente
+                Console.Write("Ingresa el numero de telefono del cliente: ");
+                string nroTemp = Console.ReadLine().Trim();
+                int nroTempNumerico;
+                if (string.IsNullOrEmpty(nroTemp) || nroTemp.Length < 6)
+                {
+                    throw new CamposCreacionIncorrectosException("El numero de telefono no puede estar vacio y debe tener 6 o mas caracteres\n");
+                }
+                else if (!int.TryParse(nroTemp, out nroTempNumerico))
+                {
+                    throw new CamposCreacionIncorrectosException("Tu numero de telefono debe contener solo numeros\n");
+                }
+
+                //creacion del cliente
+                //se va a guardar en una lista en un futuro.
+                cliente = new Cliente(nombreTemp, apellidoTemp, dniNumerico, nroTempNumerico);
+                boolRegistroCliente = true;
+                Console.WriteLine();
+            }
+            catch (CamposCreacionIncorrectosException e)
+            {
+                Console.WriteLine("\nError: " + e.Message);
+            }
+            catch (Exception)// por si se produce un fallo inesperado
+            {
+                Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+            }
+        } while (!boolRegistroCliente);   
+        
         return "Cliente registrado con exito \n" + cliente.ToString() + "\n";
     }
 
-    public string RegistrarAnimal() //metodo de la interfaz
+    public string RegistrarAnimal() //metodo de la interfaz IRegistrosVeterinario
     {
         Animal animal = null;
+        int opcionNumerica = 0;
+        // variable para el do-while del metodo interno de cada animal
+        bool registroAnimalInterno = false;
+        // variable para el do-while
+        bool boolRegistroAnimal = false;
+        do
+        {
         Console.WriteLine("---Registrar Animal--");
         Console.WriteLine("Selecciona el tipo de animal: ");
         Console.WriteLine("1- Perro");
         Console.WriteLine("2- Gato");
         Console.WriteLine("3- Ave");
         Console.WriteLine("4- Roedor");
-        int opcion = 0;
+            try
+            {
+                // selecciona la opcion del animal a crear
+                Console.Write("Coloca tu opcion en numero aqui: ");
+                string opcion = Console.ReadLine()?.Trim();
+                if (string.IsNullOrEmpty(opcion) || !int.TryParse(opcion, out opcionNumerica))
+                {
+                    throw new SeleccionarOpcionException();
+                }
+                Console.WriteLine();
+                switch (opcionNumerica)
+                {
+                    case 1:
+                        animal = RegistroPerro(registroAnimalInterno);
+                        boolRegistroAnimal = true;
+                        break;
+                    case 2:
+                        animal = RegistroGato(registroAnimalInterno);
+                        boolRegistroAnimal = true;
+                        break;
+                    case 3:
+                        animal = RegistroAve(registroAnimalInterno);
+                        boolRegistroAnimal = true;
+                        break;
+                    case 4:
+                        animal = RegistroRoedor(registroAnimalInterno);
+                        boolRegistroAnimal = true;
+                        break;
+                    default:
+                        Console.WriteLine("Opcion no valida. Coloca una opcion valida!\n");
+                        break;
+                }
+            }
+            catch (SeleccionarOpcionException e)
+            {
+                Console.WriteLine("\nError: " + e.Message);
+            }
+            catch (CamposCreacionIncorrectosException e) // agregamos esta excepcion por las dudas 
+            {
+                Console.WriteLine("Error: " + e.Message);
+            }
+            catch (Exception)// por si se produce un fallo inesperado
+            {
+                Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+            }
+        } while (!boolRegistroAnimal);
+
+        return animal.GetType() + " registrad@ con exito \n";
+    }
+
+    // Metodos de registros animales para simplificar codigo y reutilizar el mismo 
+    private void MetodoInternoRegistroAnimal(out string nombreTemp, out Cliente cliente, out DateTime fecNacTemp, out double pesoTemp, out Animal.Genero sexoTemp)
+    {
+        // variable para el do-while
+        bool boolRegistroAnimalInt = false;
+
+        // variables para que funcione el out de parametros, mas abajo se verifica si siguen en esta condicion
+        nombreTemp = "";
+        cliente = null;
+        fecNacTemp = DateTime.MinValue;
+        pesoTemp = 0;
+        sexoTemp = Animal.Genero.NoEspecificado;
         do
         {
-            Console.Write("Coloca tu opcion en numero aqui: ");
-            opcion = Convert.ToInt32(Console.ReadLine());
-            Console.WriteLine();
-            switch (opcion)
+            Console.WriteLine("---Registrando Animal---");
+
+            // carga el nombre del animal
+            Console.Write("Coloca el nombre del animal: ");
+            nombreTemp = Console.ReadLine();
+            if (string.IsNullOrEmpty(nombreTemp))
             {
-                case 1:
-                    MetodoInternoRegistroAnimal(out string nombreTemp, out Cliente cliente, out DateTime fecNacTemp, out int pesoTemp, out Animal.Genero sexoTemp);
-                    Console.Write("Coloca la raza del perro: ");
-                    string razaTemp = Console.ReadLine();
-                    animal = new Perro(nombreTemp, cliente, fecNacTemp, pesoTemp, sexoTemp, razaTemp);
-                    Console.WriteLine();
-                    break;
-                case 2:
-                    MetodoInternoRegistroAnimal(out string nombreTemp1, out Cliente cliente1, out DateTime fecNacTemp1, out int pesoTemp1, out Animal.Genero sexoTemp1);
-                    Console.Write("Coloca la raza del gato: ");
-                    string razaTemp1 = Console.ReadLine();
-                    animal = new Gato(nombreTemp1, cliente1, fecNacTemp1, pesoTemp1, sexoTemp1, razaTemp1);
-                    Console.WriteLine();
-                    break;
-                case 3:
-                    MetodoInternoRegistroAnimal(out string nombreTemp2, out Cliente cliente2, out DateTime fecNacTemp2, out int pesoTemp2, out Animal.Genero sexoTemp2);
-                    Console.WriteLine("Coloca la especie del ave: ");
-                    Console.WriteLine("1- Canario");
-                    Console.WriteLine("2- Loro");
-                    Console.WriteLine("3- Cata");
-                    Console.WriteLine("4- Silvetre");
-                    Console.WriteLine("5- Callejero (Paloma, Gorrion, Tordo, etc.)");
-                    int opcion1 = 0;
-                    Ave.Variedad especieTemp = Ave.Variedad.NoEspecificado;
-                    do
+                throw new CamposCreacionIncorrectosException("El nombre no puede estar vacio\n");
+            }
+            else if (!nombreTemp.All(char.IsLetter))
+            {
+                throw new CamposCreacionIncorrectosException("El nombre debe contener solo letras\n");
+            }
+
+            // carga el dueño del animal
+            Console.Write("Coloca el DNI del dueño: = null temporal (Apreta enter)"); // va a realizar una busqueda en una coleccion en el futuro
+            //cliente = null; colocamos null temporalmente para permitir que siga el flujo del metodo.
+            Console.ReadLine(); //AGREGAR CONTROL DE EXCEPCIONES AL IMPLEMENTAR COLECCION
+
+            // carga la fecha de nacimiento del animal
+            Console.Write("Coloca la fecha de nacimiento del animal (dd/mm/aaaa): ");
+            string fecNacString;
+            fecNacString = Console.ReadLine().Trim();
+            if (string.IsNullOrEmpty(fecNacString))
+            {
+                throw new CamposCreacionIncorrectosException("La fecha no puede estar vacia\n");
+            }
+            else if (!DateTime.TryParse(fecNacString, out fecNacTemp))
+            {
+                throw new CamposCreacionIncorrectosException("Formato de fecha invalido: " + fecNacString + "-> DD/MM/YYYY\n");
+            }
+            else
+                
+            // carga el peso del animal
+            Console.Write("Coloca el peso del animal en Kg: ");
+            string pesoString = Console.ReadLine().Trim();
+            if (string.IsNullOrEmpty(pesoString))
+            {
+                throw new CamposCreacionIncorrectosException("El peso del animal no puede estar vacio\n");
+            }
+            else if (!double.TryParse(pesoString, out pesoTemp) || pesoTemp <= 0)
+            {
+                throw new CamposCreacionIncorrectosException("El peso del animal debe ser numerico y mayor a 0\n");
+            }
+
+            // carga el sexo del animal
+            Console.WriteLine("Selecciona el sexo del animal: ");
+            Console.WriteLine("1- Masculino");
+            Console.WriteLine("2- Femenino");
+            int opcionNumerica = 0;
+            do
+            {
+                try
+                {
+                    Console.Write("Coloca tu opcion en numero aqui: ");
+                    string opcion = Console.ReadLine().Trim();
+                    if (string.IsNullOrEmpty(opcion) || !int.TryParse(opcion, out opcionNumerica))
                     {
-                        Console.Write("Coloca tu opcion en numero aqui: ");
-                        opcion1 = Convert.ToInt32(Console.ReadLine());
+                        throw new SeleccionarOpcionException();
+                    }
+                    switch (opcionNumerica)
+                    {
+                        case 1:
+                            sexoTemp = Animal.Genero.Masculino;
+                            break;
+                        case 2:
+                            sexoTemp = Animal.Genero.Femenino;
+                            break;
+                        default:
+                            Console.WriteLine("\nOpcion no valida. Coloca una opcion valida!\n");
+                            break;
+                    }
+               
+                }
+                catch (SeleccionarOpcionException e)
+                {
+                    Console.WriteLine("\nError: " + e.Message);
+                }
+                catch (Exception)// por si se produce un fallo inesperado
+                {
+                    Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+                }
+            } while (opcionNumerica != 1 && opcionNumerica != 2);
+            if (!string.IsNullOrEmpty(nombreTemp) || /*cliente == null esto es temporal ||*/
+                fecNacTemp != DateTime.MinValue || pesoTemp != 0 || sexoTemp != Animal.Genero.NoEspecificado)
+            {
+                boolRegistroAnimalInt = true;
+            }
+            
+        } while (!boolRegistroAnimalInt);
+    }
+
+    private Animal RegistroPerro(bool registroAnimal)
+    {
+        Perro animalTemp = null;
+        do
+        {
+            try
+            {
+                // llama al metodo para cargar los datos que comparten todos los animales
+                MetodoInternoRegistroAnimal(out string nombreTemp, out Cliente cliente, out DateTime fecNacTemp, out double pesoTemp, out Animal.Genero sexoTemp);
+
+                // cargamos el nombre de la raza del perro
+                Console.Write("Coloca la raza del perro: ");
+                string razaTemp = Console.ReadLine().Trim();
+                if (string.IsNullOrEmpty(razaTemp))
+                {
+                    throw new CamposCreacionIncorrectosException("La raza del perro no puede estar vacia\n");
+                }
+                else if (!razaTemp.All(char.IsLetter))
+                {
+                    throw new CamposCreacionIncorrectosException("La raza debe contener solo letras\n");
+                }
+
+                //creamos el perro
+                // en el futuro lo vamos a agregar a una coleccion
+                animalTemp = new Perro(nombreTemp, cliente, fecNacTemp, pesoTemp, sexoTemp, razaTemp);
+                registroAnimal = true;
+                Console.WriteLine();
+            }
+            catch (CamposCreacionIncorrectosException e)
+            {
+                Console.WriteLine("\nError: " + e.Message);
+            }
+            catch (Exception)// por si se produce un fallo inesperado
+            {
+                Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+            }
+        } while (!registroAnimal);
+        return animalTemp;
+    }
+
+    private Animal RegistroGato(bool registroAnimal)
+    {
+        Gato animalTemp = null;
+        do
+        {
+            try
+            {
+                // llama al metodo para cargar los datos que comparten todos los animales
+                MetodoInternoRegistroAnimal(out string nombreTemp, out Cliente cliente, out DateTime fecNacTemp, out double pesoTemp, out Animal.Genero sexoTemp);
+
+                // cargamos el nombre de la raza del gato
+                Console.Write("Coloca la raza del gato: ");
+                string razaTemp = Console.ReadLine().Trim();
+                if (string.IsNullOrEmpty(razaTemp))
+                {
+                    throw new CamposCreacionIncorrectosException("La raza del gato no puede estar vacia\n");
+                }
+                else if (!razaTemp.All(char.IsLetter))
+                {
+                    throw new CamposCreacionIncorrectosException("La raza debe contener solo letras\n");
+                }
+
+                //creamos el gato
+                // en el futuro lo vamos a agregar a una coleccion
+                animalTemp = new Gato(nombreTemp, cliente, fecNacTemp, pesoTemp, sexoTemp, razaTemp);
+                registroAnimal = true;
+                Console.WriteLine();
+            }
+            catch (CamposCreacionIncorrectosException e)
+            {
+                Console.WriteLine("\nError: " + e.Message);
+            }
+            catch (Exception)// por si se produce un fallo inesperado
+            {
+                Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+            }
+        } while (!registroAnimal);
+        return animalTemp;
+    }
+
+    private Animal RegistroAve(bool registroAnimal)
+    {
+        int opcionNumericaEnums;
+        Ave animalTemp = null;
+        do
+        {
+            try
+            {
+                // llama al metodo para cargar los datos que comparten todos los animales
+                MetodoInternoRegistroAnimal(out string nombreTemp, out Cliente cliente, out DateTime fecNacTemp, out double pesoTemp, out Animal.Genero sexoTemp);
+
+                // cargamos la especie del ave mediante entrada por consola numerica de un ENUM
+                Console.WriteLine("Coloca la especie del ave: ");
+                Console.WriteLine("1- Canario");
+                Console.WriteLine("2- Loro");
+                Console.WriteLine("3- Cata");
+                Console.WriteLine("4- Silvetre");
+                Console.WriteLine("5- Callejero (Paloma, Gorrion, Tordo, etc.)");
+                string opcionEnum;
+                Ave.Variedad especieTemp = Ave.Variedad.NoEspecificado;
+                do
+                {
+                    try
+                    {
+                        Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+                        opcionEnum = Console.ReadLine().Trim();
+                        if (string.IsNullOrEmpty(opcionEnum) || !int.TryParse(opcionEnum, out opcionNumericaEnums))
+                        {
+                            throw new SeleccionarOpcionException();
+                        }
                         Console.WriteLine();
-                        switch (opcion1)
+                        switch (opcionNumericaEnums)
                         {
                             case 1:
                                 especieTemp = Ave.Variedad.Canario;
@@ -148,54 +440,104 @@ public class Veterinario : IRegistrosVeterinario, IFacturacion, IConsultarInfo, 
                                 Console.WriteLine("Opcion no valida. Coloca una opcion valida!\n");
                                 break;
                         }
-                    } while (opcion1 < 1 || opcion1 > 5);
-                    animal = new Ave(nombreTemp2, cliente2, fecNacTemp2, pesoTemp2, sexoTemp2, especieTemp);
-                    break;
-                case 4:
-                    MetodoInternoRegistroAnimal(out string nombreTemp3, out Cliente cliente3, out DateTime fecNacTemp3, out int pesoTemp3, out Animal.Genero sexoTemp3);
-                    Console.WriteLine("Selecciona la especie del roedor");
-                    Console.WriteLine("1- Hamster");
-                    Console.WriteLine("2- Cobayo");
-                    Console.WriteLine("3- Chinchilla");
-                    Console.WriteLine("4- Rata");
-                    int opcion2 = 0;
-                    Roedor.Variedad especieTemp1 = Roedor.Variedad.NoEspecificado;
-                    do
+                    }
+                    catch (SeleccionarOpcionException e)
                     {
-                        Console.Write("Coloca tu opcion en numero aqui: ");
-                        opcion2 = Convert.ToInt32(Console.ReadLine());
+                        Console.WriteLine("\nError: " + e.Message);
+                    }
+                } while (especieTemp == Ave.Variedad.NoEspecificado);
+
+                //creamos el ave
+                // en el futuro lo vamos a agregar a una coleccion
+                animalTemp = new Ave(nombreTemp, cliente, fecNacTemp, pesoTemp, sexoTemp, especieTemp);
+                registroAnimal = true;
+            }
+            catch (CamposCreacionIncorrectosException e)
+            {
+                Console.WriteLine("\nError: " + e.Message);
+            }
+            catch (Exception)// por si se produce un fallo inesperado
+            {
+                Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+            }
+        } while (!registroAnimal);
+        return animalTemp;
+    }
+
+    private Animal RegistroRoedor(bool registroAnimal)
+    {
+        int opcionNumericaEnums;
+        Roedor animalTemp = null;
+        do
+        {
+            try
+            {
+                // llama al metodo para cargar los datos que comparten todos los animales
+                MetodoInternoRegistroAnimal(out string nombreTemp, out Cliente cliente, out DateTime fecNacTemp, out double pesoTemp, out Animal.Genero sexoTemp);
+
+                // cargamos la especie del roedor mediante entrada por consola numerica de un ENUM
+                Console.WriteLine("Selecciona la especie del roedor");
+                Console.WriteLine("1- Hamster");
+                Console.WriteLine("2- Cobayo");
+                Console.WriteLine("3- Chinchilla");
+                Console.WriteLine("4- Rata");
+                string opcionEnum;
+                Roedor.Variedad especieTemp = Roedor.Variedad.NoEspecificado;
+                do
+                {
+                    try
+                    {
+                        Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+                        opcionEnum = Console.ReadLine().Trim();
+                        if (string.IsNullOrEmpty(opcionEnum) || !int.TryParse(opcionEnum, out opcionNumericaEnums))
+                        {
+                            throw new SeleccionarOpcionException();
+                        }
                         Console.WriteLine();
-                        switch (opcion2)
+                        switch (opcionNumericaEnums)
                         {
                             case 1:
-                                especieTemp1 = Roedor.Variedad.Hamster;
+                                especieTemp = Roedor.Variedad.Hamster;
                                 break;
                             case 2:
-                                especieTemp1 = Roedor.Variedad.Cobayo;
+                                especieTemp = Roedor.Variedad.Cobayo;
                                 break;
                             case 3:
-                                especieTemp1 = Roedor.Variedad.Chinchilla;
+                                especieTemp = Roedor.Variedad.Chinchilla;
                                 break;
                             case 4:
-                                especieTemp1 = Roedor.Variedad.Rata;
+                                especieTemp = Roedor.Variedad.Rata;
                                 break;
                             default:
                                 Console.WriteLine("Opcion no valida. Coloca una opcion valida!\n");
                                 break;
                         }
-                    } while (opcion2 < 1 || opcion2 > 4);
-                    animal = new Roedor(nombreTemp3, cliente3, fecNacTemp3, pesoTemp3, sexoTemp3, especieTemp1);
-                    break;
-                default:
-                    Console.WriteLine("Opcion no valida. Coloca una opcion valida!\n");
-                    break;
-            }
-        } while (opcion < 1 || opcion > 4);
-        return animal.GetType() + " registrad@ con exito \n";
+                    }
+                    catch (SeleccionarOpcionException e)
+                    {
+                        Console.WriteLine("\nError: " + e.Message);
+                    }
+                  
+                } while (especieTemp == Roedor.Variedad.NoEspecificado);
 
+                //creamos el roedor
+                // en el futuro lo vamos a agregar a una coleccion
+                animalTemp = new Roedor(nombreTemp, cliente, fecNacTemp, pesoTemp, sexoTemp, especieTemp);
+                registroAnimal = true;
+            }
+            catch (CamposCreacionIncorrectosException e)
+            {
+                Console.WriteLine("\nError: " + e.Message);
+            }
+            catch (Exception)// por si se produce un fallo inesperado
+            {
+                Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+            }
+        } while (!registroAnimal);
+        return animalTemp;
     }
 
-    public string EliminarAnimal() //metodo de la interfaz
+    public string EliminarAnimal() //metodo de la interfaz IRegistrosVeterinario
     {
         //Console.Write("Coloca el nombre del cliente del animal a eliminar: ");
         //string nombre = Console.ReadLine();
@@ -207,7 +549,7 @@ public class Veterinario : IRegistrosVeterinario, IFacturacion, IConsultarInfo, 
         return "Metodo sin implementar!!!\n";
     }
 
-    public string EliminarCliente() //metodo de la interfaz
+    public string EliminarCliente() //metodo de la interfaz IRegistrosVeterinario
     {
         //Console.Write("Coloca el numero de dni del cliente a eliminar: ");
         //int dni = Convert.ToInt32(Console.ReadLine());
@@ -227,60 +569,94 @@ public class Veterinario : IRegistrosVeterinario, IFacturacion, IConsultarInfo, 
         //Factura factura = factura encontrada por la busqueda.
         //factura = null;
         //El GC va a pasar y eliminar el objeto Factura
-        return "Metodo sin implementar!!! \n";
-    }//metodo de la interfaz
+        return "Metodo sin implementar!!!\n";
+    }//metodo de la interfaz IFacturacion
 
-    public string CrearFactura() //metodo de la interfaz
+    public string CrearFactura() //metodo de la interfaz IFacturacion
     {
-        Console.WriteLine("---Nueva Factura---");
-        Console.Write("Ingresa el numero de factura: "); // en el futuro va a ser automatico, va a ser autoincremental.
-        int nroFactTemp = Convert.ToInt32(Console.ReadLine());
-        Console.Write("\nIngresa el cliente(apreta enter temporalmente): ");
-        Cliente clienteTemp = null; // esta en null para permitir seguir la ejecucion del codigo hasta que veamos listas para validar
-        Console.ReadLine();
-        Console.Write("\nIngresa el animal(apreta enter temporalmente): ");
-        Animal animalTemp = null; // esta en null para permitir seguir la ejecucion del codigo hasta que veamos listas para validar
-        Console.ReadLine();
-        Console.WriteLine("\nSelecciona el servicio realizado");
-        Console.WriteLine("1: Revision ");
-        Console.WriteLine("2: Cirujia ");
-        Console.WriteLine("3: Control Completo ");
-        Console.WriteLine("4: Vacunacion ");
-        Console.WriteLine("5: Laboratorio ");
-        Servicios servicioTemp = Factura.Servicios.NoDefinido;
+        // variable para el do-while
+        bool boolCrearFactura = false;
         do
         {
-            Console.Write("Ingresa la opcion(en numero) aqui: ");
-            int opcion = Convert.ToInt32(Console.ReadLine());
-            Console.WriteLine();
-            switch (opcion)
+            Factura factura = new Factura();
+            factura.Servicio = Factura.Servicios.NoDefinido;
+            Console.WriteLine("---Nueva Factura---");
+            Console.WriteLine("Numero de factura: " + Factura.ultimoNumeroFactura); //imprime el numero de factura 
+            Console.Write("Ingresa el cliente(apreta enter temporalmente): ");
+            factura.Cliente = null; // esta en null para permitir seguir la ejecucion del codigo hasta que agregue colecciones para validar
+            Console.ReadLine();// va a ir un try-catch
+            Console.Write("Ingresa el animal(apreta enter temporalmente): ");
+            factura.Animal = null; // esta en null para permitir seguir la ejecucion del codigo hasta que agregue colecciones para validar
+            Console.ReadLine();// va a ir un try-catch
+            do
             {
-                case 1:
-                    servicioTemp = Factura.Servicios.Revision;
-                    break;
-                case 2:
-                    servicioTemp = Factura.Servicios.Cirujia;
-                    break;
-                case 3:
-                    servicioTemp = Factura.Servicios.ControlCompleto;
-                    break;
-                case 4:
-                    servicioTemp = Factura.Servicios.Vacunacion;
-                    break;
-                case 5:
-                    servicioTemp = Factura.Servicios.Laboratorio;
-                    break;
-                default:
-                    Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
-                    break;
+                try
+                {
+                    Console.WriteLine("Selecciona el servicio realizado");
+                    Console.WriteLine("1: Revision ");
+                    Console.WriteLine("2: Cirujia ");
+                    Console.WriteLine("3: Control Completo ");
+                    Console.WriteLine("4: Vacunacion ");
+                    Console.WriteLine("5: Laboratorio ");
+                    Console.Write("Ingresa la opcion(en numero) aqui: ");
+                    string opcion = Console.ReadLine().Trim();
+                    int opcionNumerica;
+                    if (!int.TryParse(opcion, out opcionNumerica))
+                    {
+                        throw new SeleccionarOpcionException();
+                    }
+                    Console.WriteLine();
+                    switch (opcionNumerica)
+                    {
+                        case 1:
+                            factura.Servicio = Factura.Servicios.Revision;
+                            factura.CalcularPrecio(factura.Servicio);
+                            break;
+                        case 2:
+                            factura.Servicio = Factura.Servicios.Cirujia;
+                            factura.CalcularPrecio(factura.Servicio);
+                            break;
+                        case 3:
+                            factura.Servicio = Factura.Servicios.ControlCompleto;
+                            factura.CalcularPrecio(factura.Servicio);
+                            break;
+                        case 4:
+                            factura.Servicio = Factura.Servicios.Vacunacion;
+                            factura.CalcularPrecio(factura.Servicio);
+                            break;
+                        case 5:
+                            factura.Servicio = Factura.Servicios.Laboratorio;
+                            factura.CalcularPrecio(factura.Servicio);
+                            break;
+                        default:
+                            Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
+                            break;
+                    }
+                }
+                catch (SeleccionarOpcionException e)
+                {
+                    Console.WriteLine("\nError: " + e.Message);
+                }
+                catch (Exception)// por si se produce un fallo inesperado
+                {
+                    Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+                }
+            } while (factura.Servicio == Factura.Servicios.NoDefinido);
+            Console.WriteLine("El precio total por el servicio es de: $" + factura.Precio + "\n");
+            if (/*factura.Cliente == null || factura.Animal == null || comentado temporalmente hasta que agregue colecciones*/ factura.Servicio == Factura.Servicios.NoDefinido)
+            {
+                Factura.ultimoNumeroFactura--;
             }
-        } while (servicioTemp == Factura.Servicios.NoDefinido);
-        Factura factura = new Factura(nroFactTemp, clienteTemp, animalTemp, servicioTemp);
-        Console.WriteLine("El precio total por el servicio es de: $" + factura.Precio + "\n");
+            else
+            {
+                boolCrearFactura = true;
+            }
+        } while (!boolCrearFactura);
+
         return "Factura realizada con exito \n";
     }
 
-    public string ImprimirFactura()
+    public string ImprimirFactura() //metodo de la interfaz IFacturacion
     {
         //Console.Write("Coloca el numero de factura a buscar: ");
         //int numeroFactura = Convert.ToInt32(Console.ReadLine());
@@ -290,56 +666,72 @@ public class Veterinario : IRegistrosVeterinario, IFacturacion, IConsultarInfo, 
         return "Metodo sin implementar!!!\n";
     }
 
-    public void MostrarFacturas()
+    public void MostrarFacturas() //metodo de la interfaz IFacturacion
     {
-        // Cuando veamos la estructura de datos va a imprimirla.
+        // Cuando veamos colecciones se va a implementar el metodo.
+        // va a mostrar, el numero de factura, la fecha y el cliente.
+        // se va a poder acceder a una de ellas a la vez para mostrar el detalle
     }
 
-    public string CambiarPrecioServicio()
+    public string CambiarPrecioServicio() //metodo de la interfaz IFacturacion
     {
-        int opcionMS = 0;
+        int opcionCPNumerica = 0;
         do
         {
-            Console.WriteLine("---Selecciona el servicio a modificar su precio---");
-            Console.WriteLine("1-Revision");
-            Console.WriteLine("2-Cirugia");
-            Console.WriteLine("3-Control Completo");
-            Console.WriteLine("4-Vacunacion");
-            Console.WriteLine("5-Laboratorio");
-            Console.WriteLine("6-Volver");
-            Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
-            opcionMS = Convert.ToInt32(Console.ReadLine());
-            Console.WriteLine();
-            switch (opcionMS)
+            try
             {
-                case 1:
-                    // cuando vea diccionarios va a funcionar esto
-                    break;
-                case 2:
-                    // cuando vea diccionarios va a funcionar esto
-                    break;
-                case 3:
-                    // cuando vea diccionarios va a funcionar esto
-                    break;
-                case 4:
-                    // cuando vea diccionarios va a funcionar esto
-                    break;
-                case 5:
-                    // cuando vea diccionarios va a funcionar esto
-                    break;
-                case 6:
-                    // cuando vea diccionarios va a funcionar esto
-                    break;
-                default:
-                    Console.WriteLine("Opcion no valida. Ingresa una opcion valida\n");
-                    break;
+                Console.WriteLine("---Selecciona el servicio a modificar su precio---");
+                Console.WriteLine("1-Revision");
+                Console.WriteLine("2-Cirugia");
+                Console.WriteLine("3-Control Completo");
+                Console.WriteLine("4-Vacunacion");
+                Console.WriteLine("5-Laboratorio");
+                Console.WriteLine("6-Volver");
+                Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+                string opcionCP = Console.ReadLine().Trim();
+                if (!int.TryParse(opcionCP, out opcionCPNumerica))
+                {
+                    throw new SeleccionarOpcionException();
+                }
+                Console.WriteLine();
+                switch (opcionCPNumerica)
+                {
+                    case 1:
+                        // cuando vea diccionarios va a funcionar esto
+                        break;
+                    case 2:
+                        // cuando vea diccionarios va a funcionar esto
+                        break;
+                    case 3:
+                        // cuando vea diccionarios va a funcionar esto
+                        break;
+                    case 4:
+                        // cuando vea diccionarios va a funcionar esto
+                        break;
+                    case 5:
+                        // cuando vea diccionarios va a funcionar esto
+                        break;
+                    case 6:
+                        break;
+                    default:
+                        Console.WriteLine("Opcion no valida. Ingresa una opcion valida\n");
+                        break;
+                }
             }
-        } while (opcionMS != 6);
+            catch (SeleccionarOpcionException e)
+            {
+                Console.WriteLine("\nError: " + e.Message);
+            }
+            catch (Exception)// por si se produce un fallo inesperado
+            {
+                Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+            }
+        } while (opcionCPNumerica != 6);
         return "Volviendo...\n";
     }
 
     //Metodos para Consultar datos
-    public string ConsultarInfoCliente()
+    public string ConsultarInfoCliente() //metodo de la interfaz IConsultarInfo
     {
         //int opcionConsulta = 0;
         //Console.Write("Coloca el DNI del cliente a obtener su informacion: ");
@@ -373,10 +765,10 @@ public class Veterinario : IRegistrosVeterinario, IFacturacion, IConsultarInfo, 
         //            break;
         //    }
         //} while (opcionConsulta != 3);
-        return "Metodo sin implementar!!! \n";
+        return "Metodo sin implementar!!!\n";
     }
 
-    public string ConsultarInfoAnimal()
+    public string ConsultarInfoAnimal() //metodo de la interfaz IConsultarInfo
     {
         //int opcionConsulta = 0;
         //Console.Write("Coloca el DNI del cliente del animal a obtener su informacion: ");
@@ -413,268 +805,163 @@ public class Veterinario : IRegistrosVeterinario, IFacturacion, IConsultarInfo, 
         return "Metodo sin implementar!!!\n";
     }
 
-    // Metodo para simplificar codigo y reutilizar el mismo (actua como una funcion).
-    private void MetodoInternoRegistroAnimal(out string nombreTemp, out Cliente cliente, out DateTime fecNacTemp, out int pesoTemp, out Animal.Genero sexoTemp)
-    {
-        Console.Write("Coloca el nombre del animal: ");
-        nombreTemp = Console.ReadLine();
-        Console.Write("\nColoca el nombre del dueño: = null temporal (Apreta enter)"); // va a realizar una busqueda en la lista en el futuro
-        cliente = null; // colocamos null temporalmente para permitir que siga el flujo del metodo, cuando veamos listas vamos a realizar una busqueda por el nombre para encontrarlo.
-        Console.ReadLine();
-        Console.Write("\nColoca la fecha de nacimiento del animal (dd/mm/aaaa): ");
-        bool flujo = false;
-        string fecNacString;
-        fecNacTemp = DateTime.MinValue;
-        do
-        {
-            fecNacString = Console.ReadLine();
-            if (!DateTime.TryParse(fecNacString, out fecNacTemp)) // tuve que guiarme de chatgpt solo en esta linea de codigo para realizar la validacion. Ya que no sabia como hacerla.
-            {
-                Console.WriteLine();
-                Console.WriteLine("Formato de fecha invalido -> (DD/MM/AAAA).");
-                Console.Write("Coloca de nuevo la fecha: ");
-            }
-            else
-                flujo = true;
-        } while (!flujo);
-        Console.Write("\nColoca el peso del animal en Kg: ");
-        pesoTemp = Convert.ToInt32(Console.ReadLine());
-        Console.WriteLine("\nSelecciona el sexo del animal: ");
-        Console.WriteLine("1- Masculino");
-        Console.WriteLine("2- Femenino");
-        int opcion1 = 0;
-        do
-        {
-            Console.Write("Coloca tu opcion en numero aqui: ");
-            opcion1 = Convert.ToInt32(Console.ReadLine());
-            sexoTemp = Animal.Genero.NoEspecificado; ;
-            Console.WriteLine();
-            switch (opcion1)
-            {
-                case 1:
-                    sexoTemp = Animal.Genero.Masculino;
-                    break;
-                case 2:
-                    sexoTemp = Animal.Genero.Femenino;
-                    break;
-                default:
-                    Console.WriteLine("Opcion no valida. Coloca una opcion valida! \n");
-                    break;
-            }
-        } while (opcion1 != 1 && opcion1 != 2);
-    }
-
     //Metodos de modificacion de informacion
-    public string ModificarInfoCliente()
+    public string ModificarInfoCliente() //metodo de la interfaz IModificarInfo
     {
         // aca va a realizar una busqueda de un cliente en una coleccion
         // y va a tener la posiblidad de cambiar la informacion de un cliente
-        return "";
+        return "Metodo sin implementar!!!\n";
     }
 
-    public string ModificarInfoAnimal()
+    public string ModificarInfoAnimal()  //metodo de la interfaz IModificarInfo
     {
         // aca va a realizar una busqueda de un animal en una coleccion
         // y va a tener la posiiblidad de cambiar la informacion de un animal
-        return "";
+        return "Metodo sin implementar!!!\n";
     }
 
     //Metodos de veterinario para su objeto propio
     public string ModificarInformacion(Veterinario veterinario)
     {
-        int opcionMI = 0;
-        int opcionInd = 0;
-        bool opcionModificacion = false;
- 
+        int opcionMINumerica = 0;
         do
         {
-            Console.WriteLine("---Selecciona la informacion que quieres modificar---");
-            Console.WriteLine("1-Toda la informacion");
-            Console.WriteLine("2-Una parte");
-            Console.WriteLine("3-Volver");
-            Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
-            opcionMI = Convert.ToInt32(Console.ReadLine());
-            Console.WriteLine();
-            switch (opcionMI)
+            try
             {
-                case 1:
-                    while (opcionModificacion == false)
-                    {
+                Console.WriteLine("---Selecciona la informacion que quieres modificar---");
+                Console.WriteLine("1-Nombre de usuario");
+                Console.WriteLine("2-Contraseña");
+                Console.WriteLine("3-Nombre"); // estas opciones junto al apellido las ponemos por si por ahi escribio mal el nombre y en el futuro lo quiere cambiar
+                Console.WriteLine("4-Apellido");
+                Console.WriteLine("5-Numero de telefono");
+                Console.WriteLine("6-Volver");
+                Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+                string opcionMI = Console.ReadLine().Trim();
+                if (!int.TryParse(opcionMI, out opcionMINumerica))
+                {
+                    throw new SeleccionarOpcionException();
+                }
+                Console.WriteLine();
+                switch (opcionMINumerica)
+                {
+                    case 1:
                         Console.Write("Coloca tu nuevo nombre de usuario: ");
-                        string nombUsuTemp = Console.ReadLine();
+                        string nombUsuTemp = Console.ReadLine().Trim();
                         if (nombUsuTemp == veterinario.usuario)
                         {
-                            Console.WriteLine("No podes poner el mismo nombre de usuario.\n");
+                            throw new ArgumentException("No podes poner el mismo nombre de usuario\n");
+                        }
+                        else if (string.IsNullOrEmpty(nombUsuTemp) || nombUsuTemp.Length < 4)
+                        {
+                            throw new ArgumentException("El nombre de usuario nuevo no puede estar vacio y debe tener al menos 4 caracteres\n");
                         }
                         else
                         {
                             veterinario.Usuario = nombUsuTemp;
                             Console.WriteLine("Tu nombre de usuario ahora es: " + veterinario.Usuario + "\n");
-                            opcionModificacion = true;
                         }
-                    }
-                    opcionModificacion = false;
-                    while (opcionModificacion == false)
-                    {
+                        break;
+                    case 2:
                         Console.Write("Coloca tu nueva contraseña: ");
-                        string contTemp = Console.ReadLine();
+                        string contTemp = Console.ReadLine().Trim();
                         if (contTemp == veterinario.contraseña)
                         {
-                            Console.WriteLine("No podes poner la misma contraseña.\n");
+                            throw new ArgumentException("No podes poner la misma contraseña\n");
+                        }
+                        else if (string.IsNullOrEmpty(contTemp) || contTemp.Length < 6)
+                        {
+                            throw new ArgumentException("La contraseña nueva no puede estar vacia y debe tener 6 o mas caracteres\n");
                         }
                         else
                         {
                             veterinario.Contraseña = contTemp;
                             Console.WriteLine("Tu contraseña ahora es: " + veterinario.Contraseña + "\n");
-                            opcionModificacion = true;
                         }
-                    }
-                    opcionModificacion = false;
-                    while (opcionModificacion == false)
-                    {
+                        break;
+                    case 3:
                         Console.Write("Coloca tu nuevo nombre: ");
-                        string nombTemp = Console.ReadLine();
+                        string nombTemp = Console.ReadLine().Trim();
                         if (nombTemp == veterinario.nombre)
                         {
-                            Console.WriteLine("No podes poner el mismo nombre.\n");
+                            throw new ArgumentException("No podes poner el mismo nombre\n");
+                        }
+                        else if (string.IsNullOrEmpty(nombTemp) || nombTemp.Length < 2)
+                        {
+                            throw new ArgumentException("Tu nuevo nombre no puede estar vacio y debe tener 2 o mas letras\n");
+                        }
+                        else if (!nombTemp.All(char.IsLetter))
+                        {
+                            throw new ArgumentException("Tu nuevo nombre debe contener solo letras\n");
                         }
                         else
                         {
                             veterinario.Nombre = nombTemp;
                             Console.WriteLine("Tu nombre ahora es: " + veterinario.Nombre + "\n");
-                            opcionModificacion = true;
                         }
-                    }
-                    opcionModificacion = false;
-                    while (opcionModificacion == false)
-                    {
+                        break;
+                    case 4:
                         Console.Write("Coloca tu nuevo apellido: ");
-                        string apeTemp = Console.ReadLine();
+                        string apeTemp = Console.ReadLine().Trim();
                         if (apeTemp == veterinario.apellido)
                         {
-                            Console.WriteLine("No podes poner el mismo apellido.\n");
+                            throw new ArgumentException("No podes poner el mismo apellido\n");
+                        }
+                        else if (string.IsNullOrEmpty(apeTemp) || apeTemp.Length < 2)
+                        {
+                            throw new ArgumentException("Tu nuevo apellido no puede estar vacio y debe tener 2 o mas letras\n");
+                        }
+                        else if (!apeTemp.All(char.IsLetter))
+                        {
+                            throw new ArgumentException("Tu nuevo apellido debe contener solo letras\n");
                         }
                         else
                         {
                             veterinario.Apellido = apeTemp;
                             Console.WriteLine("Tu apellido ahora es: " + veterinario.Apellido + "\n");
-                            opcionModificacion = true;
                         }
-                    }
-                    opcionModificacion = false;
-                    while (opcionModificacion == false)
-                    {
+                        break;
+                    case 5:
                         Console.Write("Coloca tu nuevo numero de telefono: ");
-                        string numTelTemp = Console.ReadLine();
-                        if (numTelTemp == veterinario.NroTelefono)
+                        string numTelTemp = Console.ReadLine().Trim();
+                        int numTelTempNum;
+                        if (string.IsNullOrEmpty(numTelTemp) || numTelTemp.Length < 6)
                         {
-                            Console.WriteLine("No podes poner el mismo numero de telefono.\n");
+                            throw new ArgumentException("Tu numero de telefono no puede estar vacio y debe tener 6 o mas numeros\n");
+                        }
+                        if (!int.TryParse(numTelTemp, out numTelTempNum))
+                        {
+                            throw new ArgumentException("Tu nuevo numero de telefono debe contener solo numeros\n");
+                        }
+                        else if (numTelTempNum == veterinario.NroTelefono)
+                        {
+                            throw new ArgumentException("No podes poner el mismo numero de telefono\n");
                         }
                         else
                         {
-                            veterinario.NroTelefono = numTelTemp;
+                            veterinario.NroTelefono = numTelTempNum;
                             Console.WriteLine("Tu numero de telefono ahora es: " + veterinario.NroTelefono + "\n");
-                            opcionModificacion = true;
                         }
-                    }
-                    Console.WriteLine("Informacion actualizada con exito!\n");
-                    break;
-                case 2:
-                    do
-                    {
-                        Console.WriteLine("---Selecciona la informacion que quieres modificar---");
-                        Console.WriteLine("1-Nombre de usuario");
-                        Console.WriteLine("2-Contraseña");
-                        Console.WriteLine("3-Nombre"); // estas opciones junto al apellido las ponemos por si por ahi escribio mal el nombre y en el futuro lo quiere cambiar
-                        Console.WriteLine("4-Apellido");
-                        Console.WriteLine("5-Numero de telefono");
-                        Console.WriteLine("6-Volver");
-                        Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
-                        opcionInd = Convert.ToInt32(Console.ReadLine());
-                        Console.WriteLine();
-                        switch (opcionInd)
-                        {
-                            case 1:
-                                Console.Write("Coloca tu nuevo nombre de usuario: ");
-                                string nombUsuTemp = Console.ReadLine();
-                                if (nombUsuTemp == veterinario.usuario)
-                                {
-                                    Console.WriteLine("No podes poner el mismo nombre de usuario.\n");
-                                }
-                                else
-                                {
-                                    veterinario.Usuario = nombUsuTemp;
-                                    Console.WriteLine("Tu nombre de usuario ahora es: " + veterinario.Usuario + "\n");
-                                }
-                                break;
-                            case 2:
-                                Console.Write("Coloca tu nueva contraseña: ");
-                                string contTemp = Console.ReadLine();
-                                if (contTemp == veterinario.contraseña)
-                                {
-                                    Console.WriteLine("No podes poner la misma contraseña.\n");
-                                }
-                                else
-                                {
-                                    veterinario.Contraseña = contTemp;
-                                    Console.WriteLine("Tu contraseña ahora es: " + veterinario.Contraseña + "\n");
-                                }
-                                break;
-                            case 3:
-                                Console.Write("Coloca tu nuevo nombre: ");
-                                string nombTemp = Console.ReadLine();
-                                if (nombTemp == veterinario.nombre)
-                                {
-                                    Console.WriteLine("No podes poner el mismo nombre.\n");
-                                }
-                                else
-                                {
-                                    veterinario.Nombre = nombTemp;
-                                    Console.WriteLine("Tu nombre ahora es: " + veterinario.Nombre + "\n");
-                                }
-                                break;
-                            case 4:
-                                Console.Write("Coloca tu nuevo apellido: ");
-                                string apeTemp = Console.ReadLine();
-                                if (apeTemp == veterinario.apellido)
-                                {
-                                    Console.WriteLine("No podes poner el mismo apellido.\n");
-                                }
-                                else
-                                {
-                                    veterinario.Apellido = apeTemp;
-                                    Console.WriteLine("Tu apellido ahora es: " + veterinario.Apellido + "\n");
-                                }
-                                break;
-                            case 5:
-                                Console.Write("Coloca tu nuevo numero de telefono: ");
-                                string numTelTemp = Console.ReadLine();
-                                if (numTelTemp == veterinario.NroTelefono)
-                                {
-                                    Console.WriteLine("No podes poner el mismo numero de telefono.\n");
-                                }
-                                else
-                                {
-                                    veterinario.NroTelefono = numTelTemp;
-                                    Console.WriteLine("Tu numero de telefono ahora es: " + veterinario.NroTelefono + "\n");
-                                }
-                                break;
-                            case 6:
-                                Console.WriteLine("Volviendo...\n");
-                                break;
-                            default:
-                                Console.WriteLine("Opcion no valida. Ingresa una opcion valida\n");
-                                break;
-                        }
-                    } while (opcionInd != 6);
-                    break;
-                case 3:
-                    break;
-                default:
-                    Console.WriteLine("Opcion no valida. Ingresa una opcion valida\n");
-                    break;
+                        break;
+                    case 6:
+                        break;
+                    default:
+                        Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
+                        break;
+                }
             }
-        } while (opcionMI != 3);
+            catch (SeleccionarOpcionException e)
+            {
+                Console.WriteLine("\nError: " + e.Message);
+            }
+            catch (ArgumentException e)
+            {
+                Console.WriteLine("\nError: " + e.Message);
+            }
+            catch (Exception)// por si se produce un fallo inesperado
+            {
+                Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+            }
+        } while (opcionMINumerica != 6);
         return "Volviendo...\n";
     }
 

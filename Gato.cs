@@ -10,7 +10,7 @@ public class Gato: Animal
     private string raza;
     private string? vacunas; // va una lista en el futuro con todas las vacunas del gato
 
-    public Gato(string nombre, Cliente dueño, DateTime fecNac, int peso, Genero sexo, string raza) : base(nombre, dueño, fecNac, peso, sexo)
+    public Gato(string nombre, Cliente dueño, DateTime fecNac, double peso, Genero sexo, string raza) : base(nombre, dueño, fecNac, peso, sexo)
     {
         this.raza = raza;
     }
