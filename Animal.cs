@@ -9,7 +9,7 @@ public abstract class Animal: IHistorialAnimal
     protected string nombre;
     protected Cliente dueño;
     protected DateTime fecNac;
-    protected int peso;
+    protected double peso;
     protected Genero sexo;
     public enum Genero {
         Masculino,
@@ -17,7 +17,7 @@ public abstract class Animal: IHistorialAnimal
         NoEspecificado
     }
 
-    public Animal(string nombre, Cliente dueño, DateTime fecNac, int peso, Genero sexo)
+    public Animal(string nombre, Cliente dueño, DateTime fecNac, double peso, Genero sexo)
     {
         this.nombre = nombre;
         this.dueño = dueño;
@@ -44,7 +44,7 @@ public abstract class Animal: IHistorialAnimal
         set { this.fecNac = value; }
     }
 
-    public int Peso 
+    public double Peso 
     {
         get { return peso; }
         set { this.peso= value; }
@@ -59,12 +59,15 @@ public abstract class Animal: IHistorialAnimal
     // Metodos para el historial de cada animal
     public void verHistorial()
     {
-        //aca se va a implementar cuando tengamos lista.
+        //aca se va a implementar cuando tengamos colecciones
     }
 
     public void actualizarHistorial()
     {
-        //aca vamos a agregar una consulta cuando tengamos listas. 
+        //aca vamos a implementar el metodo cuando tengamos colecciones. 
+        //seleciona agregar o eliminar una consulta. 
+        // crea una nueva consulta o la elimina de la lista y despues la pone = null para el GC
+
     }
 
     public override string ToString()
