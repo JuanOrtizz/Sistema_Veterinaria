@@ -16,7 +16,7 @@ public class Ave : Animal
         NoEspecificado
     }
 
-    public Ave(string nombre, Cliente dueño, DateTime fecNac, int peso, Genero sexo, Variedad especie) 
+    public Ave(string nombre, Cliente dueño, DateTime fecNac, double peso, Genero sexo, Variedad especie) 
         : base(nombre, dueño, fecNac, peso, sexo)
     {
         this.especie = especie;
