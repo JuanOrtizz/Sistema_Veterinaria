@@ -4,32 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-public class Cliente
+public class Cliente : Persona
 {
-    private string nombre;
-    private string apellido;
     private int dni;
-    private int numTelefono;
-    private string? mascotas; // aca va a ir una lista en el futuro con todas las mascotas del cliente.
+    private List <Animal> mascotas;
 
-    public Cliente(string nombre, string apellido, int dni, int numTelefono)
+    public Cliente(string nombre, string apellido, int dni, long numTelefono) : base(nombre, apellido, numTelefono)
     { 
-        this.nombre = nombre;
-        this.apellido = apellido;
         this.dni = dni;
-        this.numTelefono = numTelefono;
-    }
-
-    public string Nombre
-    {
-        get { return nombre; }
-        set { this.nombre = value; }
-    }
-
-    public string Apellido
-    {
-        get { return apellido; }
-        set { this.apellido = value; }
+        mascotas = new List<Animal>();
     }
 
     public int DNI
@@ -38,20 +21,32 @@ public class Cliente
         set { this.dni = value; }
     }
 
-    public int NumTelefono
+    public List<Animal> Mascotas
     {
-        get { return numTelefono; }
-        set { this.numTelefono = value; }
+        get { return mascotas; }
     }
 
     public void VerAnimales()
     {
-        // aca va a ir un foreach para imprimir la lista completa de animal del cliente
+        int contadorAnimales = 1;
+        if(mascotas.Count == 0)
+        {
+            Console.WriteLine("Este cliente no tiene animales registrados en el sistema\n");
+        }
+        else
+        {
+            Console.WriteLine("---Animales del cliente---");
+            foreach (Animal animal in mascotas)
+            {
+                Console.WriteLine("[ " + contadorAnimales +" ] Nombre: " + animal.Nombre + ", Tipo de animal: " + animal.GetType());
+                contadorAnimales++;
+            }
+            Console.WriteLine();
+        }
     }
 
     public override string ToString()
     {
-        return "\n---Informacion Cliente---" + "\n Nombre: " + nombre + "\n Apellido: " + apellido + "\n DNI:"+ dni 
-            + "\n Numero de Telefono: " + numTelefono;
+        return "\n---Informacion Cliente---" + base.ToString() + "\nDNI:" + dni;
     }
 }

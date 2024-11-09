@@ -6,17 +6,17 @@ using System.Threading.Tasks;
 
 public class Consulta
 {
-    private Cliente? cliente;
-    private Animal? animal;
+    private Cliente cliente;
+    private Animal animal;
     private DateTime fecha;
     private string motivoConsulta;
     private string diagnostico;
 
-    public Consulta(Cliente cliente, Animal animal, DateTime fecha, string motivoConsulta, string diagnostico)
+    public Consulta(Cliente cliente, Animal animal, string motivoConsulta, string diagnostico)
     {
         this.cliente = cliente;
         this.animal = animal;
-        this.fecha = fecha;
+        fecha = DateTime.Now;
         this.motivoConsulta = motivoConsulta;
         this.diagnostico = diagnostico;
     }
@@ -53,8 +53,8 @@ public class Consulta
 
     public override string ToString()
     {
-        return "---Consulta---\n" + "Cliente: " + cliente.DNI + ", " + cliente.Nombre + "," + cliente.Apellido + "\nAnimal: " + animal.Nombre
-            + "\nFecha: " + fecha + "\nMotivo de la consulta: " + motivoConsulta + "\nDiagnostico: " + diagnostico;
+        return "---Consulta---\n" + "Cliente: " + cliente.Nombre + ", " + cliente.Apellido + " DNI: " +cliente.DNI + "\nAnimal: " + animal.Nombre
+            + "\nFecha: " + fecha + "\nMotivo de la consulta: " + motivoConsulta + "\nDiagnostico: " + diagnostico + "\n";
     }
 
 }
