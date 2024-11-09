@@ -6,6 +6,5 @@ using System.Threading.Tasks;
 
 public interface IHistorialAnimal
 {
-    public void verHistorial();
-    public void actualizarHistorial();
+    public string ActualizarHistorial();
 }

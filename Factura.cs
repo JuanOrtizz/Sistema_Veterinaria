@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Factura;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 public class Factura
@@ -12,10 +13,19 @@ public class Factura
 
     private int nroFactura;
     private DateTime fecha;
-    private Cliente? cliente; //permiten null temporalmente
-    private Animal? animal;
+    private Cliente cliente; //permiten null temporalmente
+    private Animal animal;
     private Servicios servicio;
     private double precio;
+
+    private static Dictionary<Servicios, double> preciosServicios = new Dictionary<Servicios, double>
+    {
+        { Servicios.Revision, 2000.00 },
+        { Servicios.Cirujia, 10000.00 },
+        { Servicios.ControlCompleto, 6000.00 },
+        { Servicios.Vacunacion, 4000.00 },
+        { Servicios.Laboratorio, 5000.00 }
+    };
 
     public enum Servicios
     {
@@ -27,10 +37,14 @@ public class Factura
         NoDefinido
     }
 
-    public Factura()
+    public Factura(Cliente cliente, Animal animal, Servicios servicio)
     {
-        nroFactura = ultimoNumeroFactura++;// incrementa en uno el ultimo numero de factura y lo asigna a nroFactura
+        nroFactura = ultimoNumeroFactura;// incrementa en uno el ultimo numero de factura y lo asigna a nroFactura
         fecha = DateTime.Now;// guarda la fecha y hora actual de cuando se creo la factura.
+        this.cliente = cliente;
+        this.animal = animal;
+        this.servicio = servicio;
+        CalcularPrecio(servicio);
     }
 
     public int NroFactura
@@ -51,6 +65,11 @@ public class Factura
         set { animal = value; }
     }
 
+    public DateTime Fecha
+    {
+        get { return fecha; }
+    }
+
     public Servicios Servicio
     {
         get { return servicio; }
@@ -63,42 +82,25 @@ public class Factura
         set { precio = value; }
     }
 
-    public void CalcularPrecio(Servicios servicio)//metodo temporal ya que cuando se implemente un diccionario ya se van a asignar desde ahi
+    public static Dictionary<Servicios, double> PreciosServicios
     {
-        switch (servicio)
+        get { return preciosServicios; }
+        set { preciosServicios = value; }
+    }
+
+    public void CalcularPrecio(Servicios servicio)
+    {
+        if (preciosServicios.TryGetValue(servicio, out double precioServicio))
         {
-            case Servicios.Revision:
-                precio = 2000.00;
-                break;
-
-            case Servicios.Cirujia:
-                precio = 10000.00;
-                break;
-
-            case Servicios.ControlCompleto:
-                precio = 6000.00;
-                break;
-
-            case Servicios.Vacunacion:
-                precio = 4000.00;
-                break;
-
-            case Servicios.Laboratorio:
-                precio = 5000.00;
-                break;
+            Precio = precioServicio;
         }
     }
 
-    public void CambiarPrecioProducto() {
-        // cuando implemente mapas o diccionarios voy a hacer este metodo
-        }
-
-
     public override string ToString()
     {
-        return "---Factura---" + "\n Numero de Factura: " + nroFactura + "\n Fecha de factura: " + fecha.ToString("dd/MM/yyyy")
-            + "\n Cliente: " + cliente.Nombre + ", " +cliente.Apellido + "\n Animal: " + animal.GetType() + ", " 
-            + animal.Nombre + "\n Servicio: " + servicio + "\n Precio: " + precio;
+        return "---Factura---" + "\nNumero de Factura: " + nroFactura + "\nFecha de factura: " + fecha.ToString("dd/MM/yyyy")
+            + "\nCliente: " + cliente.Nombre + ", " +cliente.Apellido + "\nAnimal: " + animal.GetType() + ", " 
+            + animal.Nombre + "\nServicio: " + servicio + "\nPrecio: $" + precio;
     }
 
 }
