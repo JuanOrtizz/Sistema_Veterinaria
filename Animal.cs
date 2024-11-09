@@ -4,13 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-public abstract class Animal: IHistorialAnimal
+public abstract class Animal
 {
     protected string nombre;
     protected Cliente dueño;
     protected DateTime fecNac;
     protected double peso;
     protected Genero sexo;
+    protected List<Consulta> historial;
     public enum Genero {
         Masculino,
         Femenino,
@@ -24,6 +25,7 @@ public abstract class Animal: IHistorialAnimal
         this.fecNac = fecNac;
         this.peso = peso;
         this.sexo = sexo;
+        historial = new List<Consulta>();
     }
 
     public string Nombre
@@ -56,24 +58,38 @@ public abstract class Animal: IHistorialAnimal
         set { this.sexo = value; }
     }
 
+    public List<Consulta> Historial
+    {
+        get { return historial; }
+    }
+
     // Metodos para el historial de cada animal
     public void verHistorial()
     {
-        //aca se va a implementar cuando tengamos colecciones
+        Console.WriteLine("---Historial de Consultas---");
+        if(historial.Count == 0)
+        {
+            Console.WriteLine("Este animal no tiene consultas registradas en el sistema\n");
+        }
+        else
+        {
+            int contador = 1;
+            foreach (Consulta consulta in historial)
+            {
+                Console.WriteLine("[ "+ contador +" ] Motivo: " + consulta.MotivoConsulta + ", Fecha: " + consulta.Fecha.ToString("dd/MM/yyyy"));
+                contador++;
+            }
+            Console.WriteLine();
+        }
+       
     }
 
-    public void actualizarHistorial()
-    {
-        //aca vamos a implementar el metodo cuando tengamos colecciones. 
-        //seleciona agregar o eliminar una consulta. 
-        // crea una nueva consulta o la elimina de la lista y despues la pone = null para el GC
-
-    }
 
     public override string ToString()
     {
         return "---Informacion del Animal---" + "\nNombre: " + nombre + "\nDueño: " + dueño.Nombre + ", " + dueño.Apellido +
             "\nFecha de Nacimiento: " + fecNac.ToString("dd/MM/yyyy") + "\nPeso en Kg: " + peso + "\nSexo del animal: " + sexo; 
     }
+
 }
 
