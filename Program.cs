@@ -70,7 +70,7 @@ class Program // mostramos la clase junto con el main.
 
                                     if (!veterinarios.ContainsKey(usuarioLogin) || contraseñaLogin != value.Contraseña)
                                     {
-                                        if(contadorBloquearPrograma < 3)
+                                        if(contadorBloquearPrograma < 2)
                                         {
                                             contadorLogin++;
                                             if (contadorLogin < 5)
@@ -470,9 +470,10 @@ class Program // mostramos la clase junto con el main.
                                     {
                                         Console.WriteLine("---Menu Interno Consultas---");
                                         Console.WriteLine("1-Consultar tu Informacion (Veterinario)");
-                                        Console.WriteLine("2-Consultar Informacion de un cliente");
-                                        Console.WriteLine("3-Consultar Informacion de un animal");
-                                        Console.WriteLine("4-Volver");
+                                        Console.WriteLine("2-Consultar todos los clientes registrados");
+                                        Console.WriteLine("3-Consultar Informacion de un cliente");
+                                        Console.WriteLine("4-Consultar Informacion de un animal");
+                                        Console.WriteLine("5-Volver");
                                         Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
                                         opcionIntMenu = Console.ReadLine().Trim();
                                         if (!int.TryParse(opcionIntMenu, out opcionIntMenuNum))
@@ -486,12 +487,15 @@ class Program // mostramos la clase junto con el main.
                                                 veterinarioDelegate = veterinario.ToString;
                                                 break;
                                             case 2:
-                                                veterinarioDelegate = veterinario.ConsultarInfoCliente;
+                                                veterinario.ConsultarClientes();
                                                 break;
                                             case 3:
-                                                veterinarioDelegate = veterinario.ConsultarInfoAnimal;
+                                                veterinarioDelegate = veterinario.ConsultarInfoCliente;
                                                 break;
                                             case 4:
+                                                veterinarioDelegate = veterinario.ConsultarInfoAnimal;
+                                                break;
+                                            case 5:
                                                 veterinarioDelegate = null;
                                                 Console.WriteLine("Volviendo...\n");
                                                 break;
@@ -510,7 +514,7 @@ class Program // mostramos la clase junto con el main.
                                     {
                                         Console.WriteLine("\nError: " + e.Message);
                                     }
-                                } while (opcionIntMenuNum != 4);
+                                } while (opcionIntMenuNum != 5);
                                 break;
 
                             case 5:

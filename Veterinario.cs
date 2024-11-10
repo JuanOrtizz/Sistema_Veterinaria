@@ -514,8 +514,10 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         }
         else
         {
+            var facturasOrdenadas = facturas.OrderByDescending(entry => entry.Value.Fecha);
+
             Console.WriteLine("---Facturas Registradas---");
-            foreach (KeyValuePair<int, Factura> entry in facturas)
+            foreach (KeyValuePair<int, Factura> entry in facturasOrdenadas)
             {
                 Factura factura = entry.Value;
                 Console.WriteLine("Numero de factura: " + factura.NroFactura + ", Fecha: " + factura.Fecha + ", Cliente: " + factura.Cliente.Apellido + ", " + factura.Cliente.Nombre);
@@ -680,6 +682,32 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
     }
 
     //Metodos para Consultar datos
+
+    public void ConsultarClientes() // ordenados por DNI
+    {
+
+        if (clientes.Count == 0)
+        {
+            Console.WriteLine("No hay clientes registrados en el sistema\n");
+        }
+        else
+        {
+            var clientesOrdenados = clientes.OrderBy(entry => entry.Key);
+            int contador = 1;
+
+            Console.WriteLine("---Clientes Registrados---");
+            foreach (KeyValuePair<int, Cliente> entry in clientesOrdenados)
+            {
+                Cliente cliente = entry.Value;
+                Console.WriteLine("[ " + contador + " ] DNI: " + cliente.DNI + ", Nombre: " + cliente.Apellido + ", " + cliente.Nombre);
+                contador++;
+            }
+            Console.WriteLine();
+        }
+        
+    }
+
+
     public string ConsultarInfoCliente() //metodo de la interfaz IConsultarInfo
     {
         Cliente cliente = null;
