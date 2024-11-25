@@ -2847,4 +2847,85 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return "La nueva direccion de los archivos es: " + destinoCompleto + "\n";
     }
 
+    public string EliminarTodaInformacion(string rutaClientes, string rutaFacturas)
+    {
+        bool boolBorrarInfo = false;
+        do
+        {
+            try
+            {
+                Console.WriteLine("¿Estas seguro que queres borrar toda la informacion?");
+                Console.WriteLine("1-Si");
+                Console.WriteLine("2-No, volver");
+                Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+                string opcionMenu = Console.ReadLine().Trim();
+                int opcionMenuNumerica;
+                if (!int.TryParse(opcionMenu, out opcionMenuNumerica))
+                {
+                    throw new SeleccionarOpcionException();
+                }
+                Console.WriteLine();
+                string opcionIntMenu;
+                int opcionIntMenuNum = 0;
+                switch (opcionMenuNumerica)
+                {
+                    case 1:
+                        do
+                        {
+                            try
+                            {
+                                Console.WriteLine("Seguro?");
+                                Console.WriteLine("1-Si");
+                                Console.WriteLine("2-No, volver");
+                                Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+                                opcionIntMenu = Console.ReadLine().Trim();
+                                if (!int.TryParse(opcionIntMenu, out opcionIntMenuNum))
+                                {
+                                    throw new SeleccionarOpcionException();
+                                }
+                                Console.WriteLine();
+                                switch (opcionIntMenuNum)
+                                {
+                                    case 1:
+                                        File.Delete(rutaClientes);
+                                        File.Delete(rutaFacturas);
+                                        Console.WriteLine("Reinicia la aplicacion para ver los cambios\n");
+                                        return "Se borraron todos los datos (clientes, facturas, animales) de la aplicacion\n";;
+                                    case 2:
+                                        Console.WriteLine("Volviendo...\n");
+                                        break;
+                                    default:
+
+                                        Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
+                                        break;
+                                }
+                            }
+                            catch (SeleccionarOpcionException e)
+                            {
+                                Console.WriteLine("\nError: " + e.Message);
+                            }
+                        } while (opcionIntMenuNum != 2);
+                        break;
+
+                    case 2:
+                        boolBorrarInfo = true;
+                        break;
+
+
+                    default:
+                        Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
+                        break;
+                }
+            }
+            catch (SeleccionarOpcionException e)
+            {
+                Console.WriteLine("\nError: " + e.Message);
+            }
+            catch (Exception)// por si se produce un fallo inesperado
+            {
+                Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+            }
+        } while (!boolBorrarInfo);
+     return "Volviendo...\n";
+    }
 }
