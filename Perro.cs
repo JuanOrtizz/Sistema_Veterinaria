@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 public class Perro : Animal
 {
     private string raza;
-    private List<string> vacunas; 
+    private List<string> vacunas;
 
-    public Perro(string nombre, Cliente dueño, DateTime fecNac, double peso, Genero sexo, string raza) : base(nombre, dueño, fecNac, peso, sexo)
+    public Perro(string nombre, DateTime fecNac, double peso, Genero sexo, string raza) : base(nombre, fecNac, peso, sexo)
     {
         this.raza = raza;
         vacunas = new List<string>();
@@ -24,6 +25,7 @@ public class Perro : Animal
     public List<string> Vacunas
     {
         get { return vacunas; }
+        set { this.vacunas = value; }
     }
 
     public void VerVacunas()

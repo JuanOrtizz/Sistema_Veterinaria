@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 public class Cliente : Persona
@@ -24,7 +25,10 @@ public class Cliente : Persona
     public List<Animal> Mascotas
     {
         get { return mascotas; }
+        set { this.mascotas = value; }
     }
+
+
 
     public void VerAnimales()
     {

@@ -17,8 +17,8 @@ public class Roedor : Animal
         NoEspecificado
     }
 
-    public Roedor(string nombre, Cliente dueño, DateTime fecNac, double peso, Genero sexo, Variedad especie)
-        : base(nombre, dueño, fecNac, peso, sexo)
+    public Roedor(string nombre, DateTime fecNac, double peso, Genero sexo, Variedad especie)
+        : base(nombre, fecNac, peso, sexo)
     {
         this.especie = especie;
     }

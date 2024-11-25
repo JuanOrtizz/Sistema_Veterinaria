@@ -10,7 +10,7 @@ public class Gato: Animal
     private string raza;
     private List<string> vacunas; 
 
-    public Gato(string nombre, Cliente dueño, DateTime fecNac, double peso, Genero sexo, string raza) : base(nombre, dueño, fecNac, peso, sexo)
+    public Gato(string nombre, DateTime fecNac, double peso, Genero sexo, string raza) : base(nombre, fecNac, peso, sexo)
     {
         this.raza = raza;
         vacunas = new List<string>();
@@ -25,6 +25,7 @@ public class Gato: Animal
     public List<string> Vacunas
     {
         get {return vacunas;}
+        set { this.vacunas = value; }
     }
 
     public void VerVacunas()

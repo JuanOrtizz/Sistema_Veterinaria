@@ -2,26 +2,28 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 public abstract class Animal
 {
     protected string nombre;
-    protected Cliente dueño;
     protected DateTime fecNac;
     protected double peso;
     protected Genero sexo;
     protected List<Consulta> historial;
+
+    public string Tipo { get; set; }
     public enum Genero {
         Masculino,
         Femenino,
         NoEspecificado
     }
 
-    public Animal(string nombre, Cliente dueño, DateTime fecNac, double peso, Genero sexo)
+
+    public Animal(string nombre, DateTime fecNac, double peso, Genero sexo)
     {
         this.nombre = nombre;
-        this.dueño = dueño;
         this.fecNac = fecNac;
         this.peso = peso;
         this.sexo = sexo;
@@ -32,12 +34,6 @@ public abstract class Animal
     {
         get { return nombre; }
         set { this.nombre= value; }
-    }
-
-    public Cliente Dueño 
-    {
-        get { return dueño; }
-        set { this.dueño = value; }
     }
 
     public DateTime FecNac
@@ -61,6 +57,7 @@ public abstract class Animal
     public List<Consulta> Historial
     {
         get { return historial; }
+        set { this.historial = value; }
     }
 
     // Metodos para el historial de cada animal
@@ -76,7 +73,7 @@ public abstract class Animal
             int contador = 1;
             foreach (Consulta consulta in historial)
             {
-                Console.WriteLine("[ "+ contador +" ] Motivo: " + consulta.MotivoConsulta + ", Fecha: " + consulta.Fecha.ToString("dd/MM/yyyy"));
+                Console.WriteLine("[ "+ contador +" ] Motivo: " + consulta.MotivoConsulta + ", Diagnostico: " + consulta.Diagnostico +", Fecha: " + consulta.Fecha.ToString("dd/MM/yyyy"));
                 contador++;
             }
             Console.WriteLine();
@@ -87,7 +84,7 @@ public abstract class Animal
 
     public override string ToString()
     {
-        return "---Informacion del Animal---" + "\nNombre: " + nombre + "\nDueño: " + dueño.Nombre + ", " + dueño.Apellido +
+        return "---Informacion del Animal---" + "\nNombre: " + nombre +
             "\nFecha de Nacimiento: " + fecNac.ToString("dd/MM/yyyy") + "\nPeso en Kg: " + peso + "\nSexo del animal: " + sexo; 
     }
 
