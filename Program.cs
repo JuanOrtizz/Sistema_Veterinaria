@@ -354,7 +354,7 @@ class Program // mostramos la clase junto con el main.
                         Console.WriteLine("4-Consultar datos");
                         Console.WriteLine("5-Modificar datos");
                         Console.WriteLine("6-Gestion de historiales y vacunas");
-                        Console.WriteLine("7-Cambiar ubicacion de archivos");
+                        Console.WriteLine("7-Gestionar archivos de informacion");
                         Console.WriteLine("8-Cerrar sesion");
                         Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
                         string opcionMenu = Console.ReadLine().Trim();
@@ -692,12 +692,56 @@ class Program // mostramos la clase junto con el main.
                                 break;
 
                             case 7:
-                                veterinarioDelegate = veterinario.CambiarDireccionArchivos;
-                                if (veterinarioDelegate != null)
+                                string mensajeEliminarInfo = "";
+                                do
                                 {
-                                    string mensaje = veterinarioDelegate(); // llamamos al delegado e imprimimos el mensaje return
-                                    Console.WriteLine(mensaje);
-                                }
+                                    try
+                                    {
+                                        Console.WriteLine("---¿Que deseas hacer con los archivos?---");
+                                        Console.WriteLine("1-Mover los archivos a una nueva direccion");
+                                        Console.WriteLine("2-Eliminar todos los archivos (NO RECOMENDADO)");
+                                        Console.WriteLine("3-Volver");
+                                        Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+                                        opcionIntMenu = Console.ReadLine().Trim();
+                                        if (!int.TryParse(opcionIntMenu, out opcionIntMenuNum))
+                                        {
+                                            throw new SeleccionarOpcionException();
+                                        }
+                                        Console.WriteLine();
+                                        switch (opcionIntMenuNum)
+                                        {
+                                            case 1:
+                                                veterinarioDelegate = veterinario.CambiarDireccionArchivos;
+                                                break;
+                                            case 2:
+                                                veterinarioDelegate = null;
+                                                mensajeEliminarInfo = veterinario.EliminarTodaInformacion(rutaClientes, rutaFacturas);
+                                                break;
+                                            case 3:
+                                                veterinarioDelegate = null;
+                                                Console.WriteLine("Volviendo...\n");
+                                                break;
+                                            default:
+                                                veterinarioDelegate = null;
+                                                Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
+                                                break;
+                                        }
+                                        if (veterinarioDelegate != null)
+                                        {
+                                            string mensaje = veterinarioDelegate(); // llamamos al delegado e imprimimos el mensaje return
+                                            Console.WriteLine(mensaje);
+                                        }
+                                        if (!string.IsNullOrEmpty(mensajeEliminarInfo))
+                                        {
+                                            Console.WriteLine(mensajeEliminarInfo);
+                                        }
+                                    }
+                                    catch (SeleccionarOpcionException e)
+                                    {
+                                        Console.WriteLine("\nError: " + e.Message);
+                                    }
+
+                                } while (opcionIntMenuNum != 3);
                                 break;
 
                             case 8:
