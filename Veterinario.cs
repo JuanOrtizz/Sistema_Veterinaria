@@ -1255,6 +1255,143 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return "Volviendo...\n";
     }
 
+    // Metodos para la gestion de archivos
+    public string CambiarDireccionArchivos()
+    {
+        string destinoCompleto = "";
+        bool boolCambiarDireccion = false;
+        do
+        {
+            try
+            {
+                Console.WriteLine("--- Cambiar direccion de archivos ---");
+                Console.Write("Coloca la nueva direccion a donde quieres mover los archivos: ");
+                string nuevaDireccion = Console.ReadLine().Trim();
+
+                // verifico que la nueva direccion exista
+                if (!Directory.Exists(nuevaDireccion))
+                {
+                    return "La direccion proporcionada no existe\n";
+                }
+                else
+                {
+                    // obtengo el nombre de la carpeta original y la ruta completa de destino
+                    string nombreDirectorioDestino = Path.GetFileName(Program.carpetaArchivos);
+                    destinoCompleto = Path.Combine(nuevaDireccion, nombreDirectorioDestino);
+
+                    // verifico si ya existe un directorio con el mismo nombre en la nueva ubicacion
+                    if (Directory.Exists(destinoCompleto))
+                    {
+                        return "Ya existe un directorio con el mismo nombre en la nueva ubicacion\n";
+                    }
+
+                    // muevo la carpeta a la nueva direccion
+                    Directory.Move(Program.carpetaArchivos, destinoCompleto);
+
+                    // Actualizar la ruta en el archivo de configuracion
+                    File.WriteAllText(Program.archivoConfiguracion, destinoCompleto);
+
+                    boolCambiarDireccion = true;
+
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.WriteLine("No tenes permisos para mover los archivos a la nueva ubicacion\n");
+            }
+            catch (IOException)
+            {
+                Console.WriteLine("Ocurrio un error al mover los archivos. Verifica si la carpeta esta en uso o abierta\n");
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Ocurrio un error inesperado. Intentalo de nuevo\n");
+            }
+        } while (!boolCambiarDireccion);
+        return "La nueva direccion de los archivos es: " + destinoCompleto + "\n";
+    }
+    public string EliminarTodaInformacion(string rutaClientes, string rutaFacturas)
+    {
+        bool boolBorrarInfo = false;
+        do
+        {
+            try
+            {
+                Console.WriteLine("¿Estas seguro que queres borrar toda la informacion?");
+                Console.WriteLine("1-Si");
+                Console.WriteLine("2-No, volver");
+                Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+                string opcionMenu = Console.ReadLine().Trim();
+                int opcionMenuNumerica;
+                if (!int.TryParse(opcionMenu, out opcionMenuNumerica))
+                {
+                    throw new SeleccionarOpcionException();
+                }
+                Console.WriteLine();
+                string opcionIntMenu;
+                int opcionIntMenuNum = 0;
+                switch (opcionMenuNumerica)
+                {
+                    case 1:
+                        do
+                        {
+                            try
+                            {
+                                Console.WriteLine("Seguro?");
+                                Console.WriteLine("1-Si");
+                                Console.WriteLine("2-No, volver");
+                                Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+                                opcionIntMenu = Console.ReadLine().Trim();
+                                if (!int.TryParse(opcionIntMenu, out opcionIntMenuNum))
+                                {
+                                    throw new SeleccionarOpcionException();
+                                }
+                                Console.WriteLine();
+                                switch (opcionIntMenuNum)
+                                {
+                                    case 1:
+                                        File.Delete(rutaClientes);
+                                        File.Delete(rutaFacturas);
+                                        Console.WriteLine("Reinicia la aplicacion para ver los cambios\n");
+                                        return "Se borraron todos los datos (clientes, facturas, animales) de la aplicacion\n"; ;
+                                    case 2:
+                                        Console.WriteLine("Volviendo...\n");
+                                        break;
+                                    default:
+
+                                        Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
+                                        break;
+                                }
+                            }
+                            catch (SeleccionarOpcionException e)
+                            {
+                                Console.WriteLine("\nError: " + e.Message);
+                            }
+                        } while (opcionIntMenuNum != 2);
+                        break;
+
+                    case 2:
+                        boolBorrarInfo = true;
+                        break;
+
+
+                    default:
+                        Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
+                        break;
+                }
+            }
+            catch (SeleccionarOpcionException e)
+            {
+                Console.WriteLine("\nError: " + e.Message);
+            }
+            catch (Exception)// por si se produce un fallo inesperado
+            {
+                Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+            }
+        } while (!boolBorrarInfo);
+        return "Volviendo...\n";
+    }
+
     //Metodos de veterinario para su objeto propio
     public string ModificarInformacion(Veterinario veterinario, string path)
     {
@@ -2792,140 +2929,4 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return "---Informacion Veterinario---" + "\nUsuario: " + usuario + base.ToString() + "\n";
     }
 
-    public string CambiarDireccionArchivos()
-    {
-        string destinoCompleto = "";
-        bool boolCambiarDireccion = false;
-        do
-        {
-            try
-            {
-                Console.WriteLine("--- Cambiar direccion de archivos ---");
-                Console.Write("Coloca la nueva direccion a donde quieres mover los archivos: ");
-                string nuevaDireccion = Console.ReadLine().Trim();
-
-                // verifico que la nueva direccion exista
-                if (!Directory.Exists(nuevaDireccion))
-                {
-                    return "La direccion proporcionada no existe\n";
-                }
-                else
-                {
-                    // obtengo el nombre de la carpeta original y la ruta completa de destino
-                    string nombreDirectorioDestino = Path.GetFileName(Program.carpetaArchivos);
-                    destinoCompleto = Path.Combine(nuevaDireccion, nombreDirectorioDestino);
-
-                    // verifico si ya existe un directorio con el mismo nombre en la nueva ubicacion
-                    if (Directory.Exists(destinoCompleto))
-                    {
-                        return "Ya existe un directorio con el mismo nombre en la nueva ubicacion\n";
-                    }
-
-                    // muevo la carpeta a la nueva direccion
-                    Directory.Move(Program.carpetaArchivos, destinoCompleto);
-
-                    // Actualizar la ruta en el archivo de configuracion
-                    File.WriteAllText(Program.archivoConfiguracion, destinoCompleto);
-
-                    boolCambiarDireccion = true;
-                    
-                }
-            }
-            catch (UnauthorizedAccessException)
-            {
-                Console.WriteLine("No tenes permisos para mover los archivos a la nueva ubicacion\n");
-            }
-            catch (IOException)
-            {
-                Console.WriteLine("Ocurrio un error al mover los archivos. Verifica si la carpeta esta en uso o abierta\n");
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("Ocurrio un error inesperado. Intentalo de nuevo\n");
-            }
-        } while (!boolCambiarDireccion);
-        return "La nueva direccion de los archivos es: " + destinoCompleto + "\n";
-    }
-
-    public string EliminarTodaInformacion(string rutaClientes, string rutaFacturas)
-    {
-        bool boolBorrarInfo = false;
-        do
-        {
-            try
-            {
-                Console.WriteLine("¿Estas seguro que queres borrar toda la informacion?");
-                Console.WriteLine("1-Si");
-                Console.WriteLine("2-No, volver");
-                Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
-                string opcionMenu = Console.ReadLine().Trim();
-                int opcionMenuNumerica;
-                if (!int.TryParse(opcionMenu, out opcionMenuNumerica))
-                {
-                    throw new SeleccionarOpcionException();
-                }
-                Console.WriteLine();
-                string opcionIntMenu;
-                int opcionIntMenuNum = 0;
-                switch (opcionMenuNumerica)
-                {
-                    case 1:
-                        do
-                        {
-                            try
-                            {
-                                Console.WriteLine("Seguro?");
-                                Console.WriteLine("1-Si");
-                                Console.WriteLine("2-No, volver");
-                                Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
-                                opcionIntMenu = Console.ReadLine().Trim();
-                                if (!int.TryParse(opcionIntMenu, out opcionIntMenuNum))
-                                {
-                                    throw new SeleccionarOpcionException();
-                                }
-                                Console.WriteLine();
-                                switch (opcionIntMenuNum)
-                                {
-                                    case 1:
-                                        File.Delete(rutaClientes);
-                                        File.Delete(rutaFacturas);
-                                        Console.WriteLine("Reinicia la aplicacion para ver los cambios\n");
-                                        return "Se borraron todos los datos (clientes, facturas, animales) de la aplicacion\n";;
-                                    case 2:
-                                        Console.WriteLine("Volviendo...\n");
-                                        break;
-                                    default:
-
-                                        Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
-                                        break;
-                                }
-                            }
-                            catch (SeleccionarOpcionException e)
-                            {
-                                Console.WriteLine("\nError: " + e.Message);
-                            }
-                        } while (opcionIntMenuNum != 2);
-                        break;
-
-                    case 2:
-                        boolBorrarInfo = true;
-                        break;
-
-
-                    default:
-                        Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
-                        break;
-                }
-            }
-            catch (SeleccionarOpcionException e)
-            {
-                Console.WriteLine("\nError: " + e.Message);
-            }
-            catch (Exception)// por si se produce un fallo inesperado
-            {
-                Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
-            }
-        } while (!boolBorrarInfo);
-     return "Volviendo...\n";
-    }
 }
