@@ -1,23 +1,72 @@
-﻿using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.IO;
+using System.Reflection.Metadata;
+using System.Text.Json;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 class Program // mostramos la clase junto con el main.
 {
     public static Dictionary<string, Veterinario> veterinarios = new Dictionary<string, Veterinario>();
-
+    public static string archivoVeterinarios = "veterinarios.json";
+    public static string archivoClientes = "clientes.json";
+    public static string archivoFacturas = "facturas.json";
+    public static string archivoConfiguracion = "config.txt"; // aca almacena la ruta de los archivos
+    public static string carpetaArchivos;
+    public static ArchivosJSON archivoJSON = new ArchivosJSON();
     static void Main()
     {
-        
+        if (!File.Exists(archivoConfiguracion))
+        {
+            using (FileStream fs = File.Create(archivoConfiguracion))
+            {
+                // el archivo se crea y se cierra al crearse
+            }
+            string nuevaRuta = Path.Combine(Directory.GetCurrentDirectory(), "archivos");
+            if (!Directory.Exists(nuevaRuta))
+            {
+                Directory.CreateDirectory(nuevaRuta);
+            }
+            carpetaArchivos = nuevaRuta;
+            File.WriteAllText(archivoConfiguracion, carpetaArchivos);
+        }
+        else
+        {
+            carpetaArchivos = File.ReadAllText(archivoConfiguracion).Trim();
+            if (!Directory.Exists(carpetaArchivos))
+            {
+                string nuevaRuta = Path.Combine(Directory.GetCurrentDirectory(), "archivos");
+                Directory.CreateDirectory(nuevaRuta);
+            }
+        }
+
+
+        // construyo las rutas de los archivos para usarlos por parametros
+        string rutaVeterinarios = Path.Combine(carpetaArchivos, archivoVeterinarios);
+        string rutaClientes = Path.Combine(carpetaArchivos, archivoClientes);
+        string rutaFacturas = Path.Combine(carpetaArchivos, archivoFacturas);
+
+
         bool boolInicioSistema = false;
         int opcionInicioSistNum;
         Veterinario veterinario = null;
         bool boolSistema = false;
         do
         {
-
             do
             {
                 try
                 {
+                    if (File.Exists(rutaVeterinarios))
+                    {
+                        try
+                        {
+                            Dictionary<string, Veterinario> diccionarioTemp = Program.archivoJSON.LeerJsonDiccionario<Dictionary<string, Veterinario>>(rutaVeterinarios);
+                            veterinarios = diccionarioTemp;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+                    }
                     Console.WriteLine("---Bienvenido---");
                     Console.WriteLine("1-Iniciar Sesion");
                     Console.WriteLine("2-Registrarse");
@@ -43,13 +92,13 @@ class Program // mostramos la clase junto con el main.
                             {
                                 try
                                 {
-                                    //momentaneamente si todavia no se registro, va a lanzar lo siguiente
-                                    if (veterinarios.Count == 0)
+                                    if(veterinarios.Count == 0)
                                     {
                                         Console.WriteLine("No hay veterinarios registrados en el sistema, registrate!\n");
                                         break;
                                     }
 
+                                    
                                     //ingresa el usuario su nombre de usuario
                                     Console.Write("Coloca tu usuario: "); // aca va a verificar en una bdd o archivo txt/xml/json, si existe el nombre de usuario y si existe verifica si la contraseña es valida
                                     usuarioLogin = Console.ReadLine().Trim();
@@ -176,7 +225,7 @@ class Program // mostramos la clase junto con el main.
                                     {
                                         throw new CamposCreacionIncorrectosException("Tu nombre debe tener 2 o mas letras\n");
                                     }
-                                    else if (!nombreTemp.All(char.IsLetter))
+                                    else if (!System.Text.RegularExpressions.Regex.IsMatch(nombreTemp, @"^[a-zA-Z\s]+$"))
                                     {
                                         throw new CamposCreacionIncorrectosException("Tu nombre debe contener solo letras\n");
                                     }
@@ -188,7 +237,7 @@ class Program // mostramos la clase junto con el main.
                                     {
                                         throw new CamposCreacionIncorrectosException("Tu apellido debe tener 2 o mas letras\n");
                                     }
-                                    else if (!apellidoTemp.All(char.IsLetter))
+                                    else if (!System.Text.RegularExpressions.Regex.IsMatch(apellidoTemp, @"^[a-zA-Z\s]+$"))
                                     {
                                         throw new CamposCreacionIncorrectosException("Tu apellido debe contener solo letras\n");
                                     }
@@ -209,8 +258,16 @@ class Program // mostramos la clase junto con el main.
 
                                     // Crea el objeto Veterinario
                                     Veterinario veterinarioRegistro = new Veterinario(usuarioTemp, contraseñaTemp, nombreTemp, apellidoTemp, nroTelefonoTemp);
+                                    veterinarios.Add(veterinarioRegistro.Usuario, veterinarioRegistro);
                                     Console.WriteLine("Te has registrado\n");
-                                    veterinarios.Add(usuarioTemp, veterinarioRegistro);
+                                    try
+                                    {
+                                        archivoJSON.EscribirJsonDiccionarioVeterinarios<Veterinario>(rutaVeterinarios, veterinarios);
+                                    }
+                                    catch(InvalidOperationException e)
+                                    {
+                                        Console.WriteLine(e.Message);
+                                    }
 
                                     registroBool = true;
                                 }
@@ -283,6 +340,8 @@ class Program // mostramos la clase junto con el main.
             // menu con opciones del veterinario una vez logeado
             if (veterinario != null)
             {
+                veterinario.CargarClientesPrograma(rutaClientes);
+                veterinario.CargarFacturasPrograma(rutaFacturas);
                 bool menuSalir = false;
                 do
                 {
@@ -295,7 +354,8 @@ class Program // mostramos la clase junto con el main.
                         Console.WriteLine("4-Consultar datos");
                         Console.WriteLine("5-Modificar datos");
                         Console.WriteLine("6-Gestion de historiales y vacunas");
-                        Console.WriteLine("7-Cerrar sesion");
+                        Console.WriteLine("7-Gestionar archivos de informacion");
+                        Console.WriteLine("8-Cerrar sesion");
                         Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
                         string opcionMenu = Console.ReadLine().Trim();
                         int opcionMenuNumerica;
@@ -305,7 +365,8 @@ class Program // mostramos la clase junto con el main.
                         }
                         Console.WriteLine();
 
-                        Func<string> veterinarioDelegate = null; //delegate Func para metodos con retorno string
+                        Func<string, string> veterinarioDelegateParametros = null;
+                        Func<string> veterinarioDelegate = null;//delegate Func para metodos con retorno string
                         int opcionIntMenuNum = 0;
                         string opcionIntMenu;
                         switch (opcionMenuNumerica)
@@ -329,25 +390,26 @@ class Program // mostramos la clase junto con el main.
                                         switch (opcionIntMenuNum)
                                         {
                                             case 1:
-                                                veterinarioDelegate = veterinario.RegistrarCliente;
+                                                veterinarioDelegateParametros = veterinario.RegistrarCliente;
                                                 break;
                                             case 2:
-                                                veterinarioDelegate = veterinario.RegistrarAnimal;
+                                                veterinarioDelegateParametros = veterinario.RegistrarAnimal;
                                                 break;
                                             case 3:
-                                                veterinarioDelegate = null;
+                                                veterinarioDelegateParametros = null;
                                                 Console.WriteLine("Volviendo...\n");
                                                 break;
                                             default:
-                                                veterinarioDelegate = null;
+                                                veterinarioDelegateParametros = null;
                                                 Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
                                                 break;
                                         }
-                                        if (veterinarioDelegate != null)
+                                        if (veterinarioDelegateParametros != null)
                                         {
-                                            string mensaje = veterinarioDelegate(); // llamamos al delegado e imprimimos el mensaje return
+                                            string mensaje = veterinarioDelegateParametros(rutaClientes); // llamamos al delegado e imprimimos el mensaje return
                                             Console.WriteLine(mensaje);
                                         }
+
                                     }
                                     catch (SeleccionarOpcionException e)
                                     {
@@ -378,33 +440,45 @@ class Program // mostramos la clase junto con el main.
                                         switch (opcionIntMenuNum)
                                         {
                                             case 1:
-                                                veterinarioDelegate = veterinario.CrearFactura;
+                                                veterinarioDelegate = null;
+                                                veterinarioDelegateParametros = veterinario.CrearFactura;
                                                 break;
                                             case 2:
+                                                veterinarioDelegateParametros = null;
                                                 veterinarioDelegate = veterinario.ImprimirFactura;
                                                 break;
                                             case 3:
-                                                veterinarioDelegate = veterinario.EliminarFactura;
+                                                veterinarioDelegate = null;
+                                                veterinarioDelegateParametros = veterinario.EliminarFactura;
                                                 break;
                                             case 4:
                                                 veterinarioDelegate = null;
+                                                veterinarioDelegateParametros = null;
                                                 veterinario.MostrarFacturas();
                                                 break;
                                             case 5:
+                                                veterinarioDelegateParametros = null;
                                                 veterinarioDelegate = veterinario.CambiarPrecioServicio;
                                                 break;
                                             case 6:
                                                 veterinarioDelegate = null;
+                                                veterinarioDelegateParametros = null;
                                                 Console.WriteLine("Volviendo...\n");
                                                 break;
                                             default:
                                                 veterinarioDelegate = null;
+                                                veterinarioDelegateParametros = null;
                                                 Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
                                                 break;
                                         }
                                         if (veterinarioDelegate != null)
                                         {
                                             string mensaje = veterinarioDelegate(); // llamamos al delegado e imprimimos el mensaje return
+                                            Console.WriteLine(mensaje);
+                                        }
+                                        else if (veterinarioDelegateParametros != null)
+                                        {
+                                            string mensaje = veterinarioDelegateParametros(rutaFacturas); // llamamos al delegado e imprimimos el mensaje return
                                             Console.WriteLine(mensaje);
                                         }
                                     }
@@ -435,23 +509,23 @@ class Program // mostramos la clase junto con el main.
                                         switch (opcionIntMenuNum)
                                         {
                                             case 1:
-                                                veterinarioDelegate = veterinario.EliminarCliente;
+                                                veterinarioDelegateParametros = veterinario.EliminarCliente;
                                                 break;
                                             case 2:
-                                                veterinarioDelegate = veterinario.EliminarAnimal;
+                                                veterinarioDelegateParametros = veterinario.EliminarAnimal;
                                                 break;
                                             case 3:
-                                                veterinarioDelegate = null;
+                                                veterinarioDelegateParametros = null;
                                                 Console.WriteLine("Volviendo...\n");
                                                 break;
                                             default:
-                                                veterinarioDelegate = null;
+                                                veterinarioDelegateParametros = null;
                                                 Console.WriteLine("Opcion no valida. Ingresa una opcion valida!" + "\n");
                                                 break;
                                         }
-                                        if (veterinarioDelegate != null)
+                                        if (veterinarioDelegateParametros != null)
                                         {
-                                            string mensaje = veterinarioDelegate(); // llamamos al delegado e imprimimos el mensaje return
+                                            string mensaje = veterinarioDelegateParametros(rutaClientes); // llamamos al delegado e imprimimos el mensaje return
                                             Console.WriteLine(mensaje);
                                         }
                                     }
@@ -487,6 +561,7 @@ class Program // mostramos la clase junto con el main.
                                                 veterinarioDelegate = veterinario.ToString;
                                                 break;
                                             case 2:
+                                                veterinarioDelegate = null;
                                                 veterinario.ConsultarClientes();
                                                 break;
                                             case 3:
@@ -537,27 +612,27 @@ class Program // mostramos la clase junto con el main.
                                         switch (opcionIntMenuNum)
                                         {
                                             case 1:
-                                                string mensaje = veterinario.ModificarInformacion(veterinario);
+                                                string mensaje = veterinario.ModificarInformacion(veterinario, rutaVeterinarios);
                                                 Console.WriteLine(mensaje);
                                                 break;
                                             case 2:
-                                                veterinarioDelegate = veterinario.ModificarInfoCliente;
+                                                veterinarioDelegateParametros = veterinario.ModificarInfoCliente;
                                                 break;
                                             case 3:
-                                                veterinarioDelegate = veterinario.ModificarInfoAnimal;
+                                                veterinarioDelegateParametros = veterinario.ModificarInfoAnimal;
                                                 break;
                                             case 4:
-                                                veterinarioDelegate = null;
+                                                veterinarioDelegateParametros = null;
                                                 Console.WriteLine("Volviendo...\n");
                                                 break;
                                             default:
-                                                veterinarioDelegate = null;
+                                                veterinarioDelegateParametros = null;
                                                 Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
                                                 break;
                                         }
-                                        if (veterinarioDelegate != null)
+                                        if (veterinarioDelegateParametros != null)
                                         {
-                                            string mensaje = veterinarioDelegate(); // llamamos al delegado e imprimimos el mensaje return
+                                            string mensaje = veterinarioDelegateParametros(rutaClientes); // llamamos al delegado e imprimimos el mensaje return
                                             Console.WriteLine(mensaje);
                                         }
                                     }
@@ -588,10 +663,59 @@ class Program // mostramos la clase junto con el main.
                                         switch (opcionIntMenuNum)
                                         {
                                             case 1:
-                                                veterinarioDelegate = veterinario.ModificarVacunas;
+                                                veterinarioDelegateParametros = veterinario.ModificarVacunas;
                                                 break;
                                             case 2:
-                                                veterinarioDelegate = veterinario.ActualizarHistorial;
+                                                veterinarioDelegateParametros = veterinario.ActualizarHistorial;
+                                                break;
+                                            case 3:
+                                                veterinarioDelegateParametros = null;
+                                                Console.WriteLine("Volviendo...\n");
+                                                break;
+                                            default:
+                                                veterinarioDelegateParametros = null;
+                                                Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
+                                                break;
+                                        }
+                                        if (veterinarioDelegateParametros != null)
+                                        {
+                                            string mensaje = veterinarioDelegateParametros(rutaClientes); // llamamos al delegado e imprimimos el mensaje return
+                                            Console.WriteLine(mensaje);
+                                        }
+                                    }
+                                    catch (SeleccionarOpcionException e)
+                                    {
+                                        Console.WriteLine("\nError: " + e.Message);
+                                    }
+
+                                } while (opcionIntMenuNum != 3);
+                                break;
+
+                            case 7:
+                                string mensajeEliminarInfo = "";
+                                do
+                                {
+                                    try
+                                    {
+                                        Console.WriteLine("---¿Que deseas hacer con los archivos?---");
+                                        Console.WriteLine("1-Mover los archivos a una nueva direccion");
+                                        Console.WriteLine("2-Eliminar todos los archivos (NO RECOMENDADO)");
+                                        Console.WriteLine("3-Volver");
+                                        Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+                                        opcionIntMenu = Console.ReadLine().Trim();
+                                        if (!int.TryParse(opcionIntMenu, out opcionIntMenuNum))
+                                        {
+                                            throw new SeleccionarOpcionException();
+                                        }
+                                        Console.WriteLine();
+                                        switch (opcionIntMenuNum)
+                                        {
+                                            case 1:
+                                                veterinarioDelegate = veterinario.CambiarDireccionArchivos;
+                                                break;
+                                            case 2:
+                                                veterinarioDelegate = null;
+                                                mensajeEliminarInfo = veterinario.EliminarTodaInformacion(rutaClientes, rutaFacturas);
                                                 break;
                                             case 3:
                                                 veterinarioDelegate = null;
@@ -607,6 +731,10 @@ class Program // mostramos la clase junto con el main.
                                             string mensaje = veterinarioDelegate(); // llamamos al delegado e imprimimos el mensaje return
                                             Console.WriteLine(mensaje);
                                         }
+                                        if (!string.IsNullOrEmpty(mensajeEliminarInfo))
+                                        {
+                                            Console.WriteLine(mensajeEliminarInfo);
+                                        }
                                     }
                                     catch (SeleccionarOpcionException e)
                                     {
@@ -616,7 +744,7 @@ class Program // mostramos la clase junto con el main.
                                 } while (opcionIntMenuNum != 3);
                                 break;
 
-                            case 7:
+                            case 8:
                                 bool boolSalir = false;
                                 do
                                 {

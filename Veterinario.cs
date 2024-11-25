@@ -1,21 +1,35 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using static Factura;
 
 public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsultarInfo, IModificarInfo, IHistorialAnimal
 {
+
     private string usuario;
+
     private string contraseña; // despues la vamos a hashear en el futuro.
 
-    private Dictionary<int, Cliente> clientes;
-    private Dictionary<int, Factura> facturas;
+    private static Dictionary<int, Cliente> clientes;
+    private static Dictionary<int, Factura> facturas;
 
     //Constructor
+    public Veterinario() : base("Desconocido", "Desconocido", 0) 
+    {
+        this.Usuario = "Desconocido";
+        this.Contraseña = "Desconocida";
+        clientes = new Dictionary<int, Cliente>();
+        facturas = new Dictionary<int, Factura>();
+    }
+
     public Veterinario(string usuario, string contraseña, string nombre, string apellido, long numTelefono) : base(nombre, apellido, numTelefono)
     {
         this.usuario = usuario;
@@ -37,8 +51,43 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         set { contraseña = value; }
     }
 
+    //Metodos para el manejo de datos JSON de clientes y facturas
+    public void CargarClientesPrograma(string path) 
+    {
+        if (File.Exists(path))
+        {
+            try
+            {
+                Dictionary<int, Cliente> diccionario = Program.archivoJSON.LeerJsonDiccionarioConAnimales<Dictionary<int, Cliente>>(path);
+
+                clientes = diccionario;
+            }
+            catch (JsonException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+    }
+
+    public void CargarFacturasPrograma(string path)
+    {
+        if (File.Exists(path))
+        {
+            try
+            {
+                Dictionary<int, Factura> diccionario = Program.archivoJSON.LeerJsonDiccionarioConAnimales<Dictionary<int, Factura>>(path);
+                facturas = diccionario;
+            }
+            catch (JsonException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+    }
+
+
     //Metodos de Registro y Eliminacion.
-    public string RegistrarCliente() //metodo de la interfaz IRegistrosVeterinario
+    public string RegistrarCliente(string path) //metodo de la interfaz IRegistrosVeterinario
     {
         Cliente cliente = null;
 
@@ -57,7 +106,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                 {
                     throw new CamposCreacionIncorrectosException("El nombre debe tener 2 o mas letras\n");
                 }
-                else if (!nombreTemp.All(char.IsLetter))
+                else if (!System.Text.RegularExpressions.Regex.IsMatch(nombreTemp, @"^[a-zA-Z\s]+$"))
                 {
                     throw new CamposCreacionIncorrectosException("El nombre debe contener solo letras\n");
                 }
@@ -69,7 +118,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                 {
                     throw new CamposCreacionIncorrectosException("El apellido debe tener 2 o mas letras\n");
                 }
-                else if (!apellidoTemp.All(char.IsLetter))
+                else if (!System.Text.RegularExpressions.Regex.IsMatch(apellidoTemp, @"^[a-zA-Z\s]+$"))// regex para que permita solo letras y espacios)
                 {
                     throw new CamposCreacionIncorrectosException("El apellido debe contener solo letras\n");
                 }
@@ -108,7 +157,15 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                 else
                 {
                     cliente = new Cliente(nombreTemp, apellidoTemp, dniNumerico, nroTempNumerico);
-                    clientes.Add(dniNumerico, cliente);
+                    clientes.Add(cliente.DNI, cliente);
+                    try
+                    {
+                        Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                    }
+                    catch (NotSupportedException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                     boolRegistroCliente = true;
                     Console.WriteLine();
                 }
@@ -126,7 +183,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return "Cliente registrado con exito \n" + cliente.ToString() + "\n";
     }
 
-    public string RegistrarAnimal() //metodo de la interfaz IRegistrosVeterinario
+    public string RegistrarAnimal(string path) //metodo de la interfaz IRegistrosVeterinario
     {
         Animal animal = null;
         int opcionNumerica = 0;
@@ -154,19 +211,19 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                 switch (opcionNumerica)
                 {
                     case 1:
-                        animal = RegistroPerro();
+                        animal = RegistroPerro(path);
                         boolRegistroAnimal = true;
                         break;
                     case 2:
-                        animal = RegistroGato();
+                        animal = RegistroGato(path);
                         boolRegistroAnimal = true;
                         break;
                     case 3:
-                        animal = RegistroAve();
+                        animal = RegistroAve(path);
                         boolRegistroAnimal = true;
                         break;
                     case 4:
-                        animal = RegistroRoedor();
+                        animal = RegistroRoedor(path);
                         boolRegistroAnimal = true;
                         break;
                     case 5:
@@ -201,7 +258,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return animal.GetType() + " registrad@ con exito \n\n" + animal.ToString() + "\n";
     }
 
-    public string EliminarAnimal() //metodo de la interfaz IRegistrosVeterinario
+    public string EliminarAnimal(string path) //metodo de la interfaz IRegistrosVeterinario
     {
         Cliente cliente = null;
         Animal animal = null;
@@ -234,6 +291,14 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                         int indice = cliente.Mascotas.IndexOf(animal);
                         cliente.Mascotas.RemoveAt(indice);
                         animal = null;
+                        try
+                        {
+                            Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                        }
+                        catch (NotSupportedException e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
                         boolEliminarAnimal = true;
                     }
                 }
@@ -255,7 +320,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return "\nAnimal eliminado con exito!\n";
     }
 
-    public string EliminarCliente() //metodo de la interfaz IRegistrosVeterinario
+    public string EliminarCliente(string path) //metodo de la interfaz IRegistrosVeterinario
     {
         Cliente cliente = null;
         bool boolEliminarCliente = false;
@@ -282,6 +347,14 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                         int dni = cliente.DNI;
                         clientes.Remove(dni);
                         cliente = null;
+                        try
+                        {
+                            Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                        }
+                        catch (NotSupportedException e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
                         boolEliminarCliente = true;
                     }
                 }
@@ -299,7 +372,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
     }
 
     //Metodos para Facturacion
-    public string CrearFactura() //metodo de la interfaz IFacturacion
+    public string CrearFactura(string path) //metodo de la interfaz IFacturacion
     {
         // variable para el do-while
         bool boolCrearFactura = false;
@@ -398,6 +471,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                 {
                     factura = new Factura(cliente, animal, servicio);
                     facturas.Add(factura.NroFactura, factura);
+                    Program.archivoJSON.EscribirJsonDiccionarioFacturas<Factura>(path, facturas);
                     boolCrearFactura = true;
                 }
             }   
@@ -422,7 +496,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return "Factura realizada con exito!\n\n" + factura.ToString() + "\n" ;
     }
 
-    public string EliminarFactura()
+    public string EliminarFactura(string path)
     {
         Factura factura = null;
         bool boolEliminarFactura = false;
@@ -449,6 +523,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                         int numeroFact = factura.NroFactura;
                         facturas.Remove(numeroFact);
                         factura = null;
+                        Program.archivoJSON.EscribirJsonDiccionarioFacturas<Factura>(path, facturas);
                         boolEliminarFactura = true;
                     }
                 }
@@ -481,7 +556,6 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                 }
                 else
                 {
-                    Console.WriteLine("---Eliminar factura---");
                     factura = validarFactura(factura);
                     if (factura == null)
                     {
@@ -707,7 +781,6 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         
     }
 
-
     public string ConsultarInfoCliente() //metodo de la interfaz IConsultarInfo
     {
         Cliente cliente = null;
@@ -877,7 +950,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
     }
 
     //Metodos de modificacion de informacion
-    public string ModificarInfoCliente() //metodo de la interfaz IModificarInfo
+    public string ModificarInfoCliente(string path) //metodo de la interfaz IModificarInfo
     {
         Cliente cliente = null;
         bool boolModificarInfoCliente = false;
@@ -902,8 +975,8 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                 else
                 {
                     Console.WriteLine();
-                    ModificarInfoClienteInterno(cliente);
-                    boolModificarInfoCliente = true; ;
+                    ModificarInfoClienteInterno(cliente, path);
+                    boolModificarInfoCliente = true; 
                 }
             }
             catch (ArgumentException e)
@@ -918,7 +991,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return "Volviendo...\n";
     }
 
-    public string ModificarInfoAnimal()  //metodo de la interfaz IModificarInfo
+    public string ModificarInfoAnimal(string path)  //metodo de la interfaz IModificarInfo
     {
         Cliente cliente = null;
         Animal animal = null;
@@ -949,7 +1022,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                     {
                         animal = validarAnimal(cliente, animal);
                         Console.WriteLine();
-                        ModificarInfoAnimalInterno(cliente, animal);
+                        ModificarInfoAnimalInterno(cliente, animal, path);
                         boolModificarInfoAnimal = true;
                     }
                 }
@@ -972,7 +1045,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
     }
 
     //Metodo para el historial de los animales
-    public string ActualizarHistorial() //metodo de la interfaz IHistorialAnimal
+    public string ActualizarHistorial(string path) //metodo de la interfaz IHistorialAnimal
     {
         Cliente cliente = null;
         Animal animal = null;
@@ -1028,14 +1101,14 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                         switch (opcionMenuNum)
                         {
                             case 1:
-                                mensaje = AgregarConsulta(cliente, animal);
+                                mensaje = AgregarConsulta(cliente, animal, path);
                                 Console.WriteLine();
                                 break;
                             case 2:
-                                mensaje = EliminarConsulta(cliente, animal);
+                                mensaje = EliminarConsulta(cliente, animal, path);
                                 break;
                             case 3:
-                                mensaje = VaciarHistorial(cliente, animal);
+                                mensaje = VaciarHistorial(cliente, animal, path);
                                 break;
                             case 4:
                                 boolAH = true;
@@ -1074,7 +1147,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
     }
 
     //Metodo para las vacunas de perros y gatos
-    public string ModificarVacunas()
+    public string ModificarVacunas(string path)
     {
         bool boolModificarInformacion = false;
         int opcionNum;
@@ -1141,13 +1214,13 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                                         VerVacunas(animalCasteado);
                                         break;
                                     case 2:
-                                        AgregarVacuna(animalCasteado);
+                                        AgregarVacuna(animalCasteado, path);
                                         break;
                                     case 3:
-                                        EliminarVacuna(animalCasteado);
+                                        EliminarVacuna(animalCasteado, path);
                                         break;
                                     case 4:
-                                        ModificarVacuna(animalCasteado);
+                                        ModificarVacuna(animalCasteado, path);
                                         break;
                                     case 5:
                                         boolVacunasAnimal = true;
@@ -1163,7 +1236,6 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                                 Console.WriteLine("Error: " + e.Message);
                             }
                         } while (!boolVacunasAnimal);
-                        
                     }
                     else
                     {
@@ -1183,8 +1255,145 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return "Volviendo...\n";
     }
 
+    // Metodos para la gestion de archivos
+    public string CambiarDireccionArchivos()
+    {
+        string destinoCompleto = "";
+        bool boolCambiarDireccion = false;
+        do
+        {
+            try
+            {
+                Console.WriteLine("--- Cambiar direccion de archivos ---");
+                Console.Write("Coloca la nueva direccion a donde quieres mover los archivos: ");
+                string nuevaDireccion = Console.ReadLine().Trim();
+
+                // verifico que la nueva direccion exista
+                if (!Directory.Exists(nuevaDireccion))
+                {
+                    return "La direccion proporcionada no existe\n";
+                }
+                else
+                {
+                    // obtengo el nombre de la carpeta original y la ruta completa de destino
+                    string nombreDirectorioDestino = Path.GetFileName(Program.carpetaArchivos);
+                    destinoCompleto = Path.Combine(nuevaDireccion, nombreDirectorioDestino);
+
+                    // verifico si ya existe un directorio con el mismo nombre en la nueva ubicacion
+                    if (Directory.Exists(destinoCompleto))
+                    {
+                        return "Ya existe un directorio con el mismo nombre en la nueva ubicacion\n";
+                    }
+
+                    // muevo la carpeta a la nueva direccion
+                    Directory.Move(Program.carpetaArchivos, destinoCompleto);
+
+                    // Actualizar la ruta en el archivo de configuracion
+                    File.WriteAllText(Program.archivoConfiguracion, destinoCompleto);
+
+                    boolCambiarDireccion = true;
+
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Console.WriteLine("No tenes permisos para mover los archivos a la nueva ubicacion\n");
+            }
+            catch (IOException)
+            {
+                Console.WriteLine("Ocurrio un error al mover los archivos. Verifica si la carpeta esta en uso o abierta\n");
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Ocurrio un error inesperado. Intentalo de nuevo\n");
+            }
+        } while (!boolCambiarDireccion);
+        return "La nueva direccion de los archivos es: " + destinoCompleto + "\n";
+    }
+    public string EliminarTodaInformacion(string rutaClientes, string rutaFacturas)
+    {
+        bool boolBorrarInfo = false;
+        do
+        {
+            try
+            {
+                Console.WriteLine("¿Estas seguro que queres borrar toda la informacion?");
+                Console.WriteLine("1-Si");
+                Console.WriteLine("2-No, volver");
+                Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+                string opcionMenu = Console.ReadLine().Trim();
+                int opcionMenuNumerica;
+                if (!int.TryParse(opcionMenu, out opcionMenuNumerica))
+                {
+                    throw new SeleccionarOpcionException();
+                }
+                Console.WriteLine();
+                string opcionIntMenu;
+                int opcionIntMenuNum = 0;
+                switch (opcionMenuNumerica)
+                {
+                    case 1:
+                        do
+                        {
+                            try
+                            {
+                                Console.WriteLine("Seguro?");
+                                Console.WriteLine("1-Si");
+                                Console.WriteLine("2-No, volver");
+                                Console.Write("Coloca tu opcion (NUMERICA) aqui: ");
+                                opcionIntMenu = Console.ReadLine().Trim();
+                                if (!int.TryParse(opcionIntMenu, out opcionIntMenuNum))
+                                {
+                                    throw new SeleccionarOpcionException();
+                                }
+                                Console.WriteLine();
+                                switch (opcionIntMenuNum)
+                                {
+                                    case 1:
+                                        File.Delete(rutaClientes);
+                                        File.Delete(rutaFacturas);
+                                        Console.WriteLine("Reinicia la aplicacion para ver los cambios\n");
+                                        return "Se borraron todos los datos (clientes, facturas, animales) de la aplicacion\n"; ;
+                                    case 2:
+                                        Console.WriteLine("Volviendo...\n");
+                                        break;
+                                    default:
+
+                                        Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
+                                        break;
+                                }
+                            }
+                            catch (SeleccionarOpcionException e)
+                            {
+                                Console.WriteLine("\nError: " + e.Message);
+                            }
+                        } while (opcionIntMenuNum != 2);
+                        break;
+
+                    case 2:
+                        boolBorrarInfo = true;
+                        break;
+
+
+                    default:
+                        Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
+                        break;
+                }
+            }
+            catch (SeleccionarOpcionException e)
+            {
+                Console.WriteLine("\nError: " + e.Message);
+            }
+            catch (Exception)// por si se produce un fallo inesperado
+            {
+                Console.WriteLine("\nSe produjo un error, intentalo de nuevo\n");
+            }
+        } while (!boolBorrarInfo);
+        return "Volviendo...\n";
+    }
+
     //Metodos de veterinario para su objeto propio
-    public string ModificarInformacion(Veterinario veterinario)
+    public string ModificarInformacion(Veterinario veterinario, string path)
     {
         int opcionMINumerica = 0;
         do
@@ -1266,7 +1475,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                         {
                             throw new ArgumentException("Tu nombre debe tener 2 o mas letras\n");
                         }
-                        else if (!nombTemp.All(char.IsLetter))
+                        else if (!System.Text.RegularExpressions.Regex.IsMatch(nombTemp, @"^[a-zA-Z\s]+$"))// regex para que permita solo letras y espacios
                         {
                             throw new ArgumentException("Tu nuevo nombre debe contener solo letras\n");
                         }
@@ -1287,7 +1496,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                         {
                             throw new ArgumentException("Tu apellido debe tener 2 o mas letras\n");
                         }
-                        else if (!apeTemp.All(char.IsLetter))
+                        else if (!System.Text.RegularExpressions.Regex.IsMatch(apeTemp, @"^[a-zA-Z\s]+$"))// regex para que permita solo letras y espacios
                         {
                             throw new ArgumentException("Tu nuevo apellido debe contener solo letras\n");
                         }
@@ -1324,6 +1533,14 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                     default:
                         Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
                         break;
+                }
+                try
+                {
+                    Program.archivoJSON.EscribirJsonDiccionarioVeterinarios<Veterinario>(path, Program.veterinarios);
+                }
+                catch (InvalidOperationException e)
+                {
+                    Console.WriteLine(e.Message);
                 }
             }
             catch (SeleccionarOpcionException e)
@@ -1447,7 +1664,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
     }
 
     //Utilizados en el metodo registrarAnimal
-    private Animal RegistroPerro()
+    private Animal RegistroPerro(string path)
     {
         bool boolRegistroPerro = false;
         Perro animalTemp = null;
@@ -1468,14 +1685,29 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                     {
                         throw new CamposCreacionIncorrectosException("La raza del perro no puede estar vacia\n");
                     }
-                    else if (!razaTemp.All(char.IsLetter))
+                    else if (!System.Text.RegularExpressions.Regex.IsMatch(razaTemp, @"^[a-zA-Z\s]+$"))// regex para que permita solo letras y espacios
                     {
                         throw new CamposCreacionIncorrectosException("La raza debe contener solo letras\n");
                     }
 
                     //creamos el perro y lo agregamos a la lista de mascotas del cliente
-                    animalTemp = new Perro(nombreTemp, cliente, fecNacTemp, pesoTemp, sexoTemp, razaTemp);
+                    animalTemp = new Perro(nombreTemp, fecNacTemp, pesoTemp, sexoTemp, razaTemp);
                     cliente.Mascotas.Add(animalTemp);
+
+                    // Guardar los cambios en el archivo
+                    try
+                    {
+                        Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                    }
+                    catch (NotSupportedException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+
+                    //try { Program.archivoJSON.EscribirJson(Program.archivoClientes, cliente); }
+                    //catch (JsonException e) { Console.WriteLine(e.Message); }
+
+
                     boolRegistroPerro = true;
                     Console.WriteLine();
                 }
@@ -1496,7 +1728,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return animalTemp;
     }
 
-    private Animal RegistroGato()
+    private Animal RegistroGato(string path)
     {
         bool boolRegistroGato = false;
         Gato animalTemp = null;
@@ -1517,14 +1749,24 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                     {
                         throw new CamposCreacionIncorrectosException("La raza del gato no puede estar vacia\n");
                     }
-                    else if (!razaTemp.All(char.IsLetter))
+                    else if (!System.Text.RegularExpressions.Regex.IsMatch(razaTemp, @"^[a-zA-Z\s]+$"))
                     {
                         throw new CamposCreacionIncorrectosException("La raza debe contener solo letras\n");
                     }
 
                     //creamos el gato y lo agregamos a la lista de mascotas del cliente
-                    animalTemp = new Gato(nombreTemp, cliente, fecNacTemp, pesoTemp, sexoTemp, razaTemp);
+                    animalTemp = new Gato(nombreTemp, fecNacTemp, pesoTemp, sexoTemp, razaTemp);
                     cliente.Mascotas.Add(animalTemp);
+
+                    try
+                    {
+                        Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                    }
+                    catch (NotSupportedException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+
                     boolRegistroGato = true;
                     Console.WriteLine();
                 }
@@ -1545,7 +1787,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return animalTemp;
     }
 
-    private Animal RegistroAve()
+    private Animal RegistroAve(string path)
     {
         int opcionNumericaEnums;
         bool boolRegistroAve = false;
@@ -1609,8 +1851,18 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                     } while (especieTemp == Ave.Variedad.NoEspecificado);
 
                     //creamos el ave y la agregamos a la lista de mascotas del cliente
-                    animalTemp = new Ave(nombreTemp, cliente, fecNacTemp, pesoTemp, sexoTemp, especieTemp);
+                    animalTemp = new Ave(nombreTemp, fecNacTemp, pesoTemp, sexoTemp, especieTemp);
                     cliente.Mascotas.Add(animalTemp);
+
+                    try
+                    {
+                        Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                    }
+                    catch (NotSupportedException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+
                     boolRegistroAve = true;
                 }
                 else
@@ -1634,7 +1886,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return animalTemp;
     }
 
-    private Animal RegistroRoedor()
+    private Animal RegistroRoedor(string path)
     {
         bool boolRegistroRoedor = false;
         int opcionNumericaEnums;
@@ -1695,8 +1947,18 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                     } while (especieTemp == Roedor.Variedad.NoEspecificado);
 
                     //creamos el roedor y lo agregamos a la lista de mascotas del cliente
-                    animalTemp = new Roedor(nombreTemp, cliente, fecNacTemp, pesoTemp, sexoTemp, especieTemp);
+                    animalTemp = new Roedor(nombreTemp, fecNacTemp, pesoTemp, sexoTemp, especieTemp);
                     cliente.Mascotas.Add(animalTemp);
+
+                    try
+                    {
+                        Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                    }
+                    catch (NotSupportedException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+
                     boolRegistroRoedor = true;
                 }
                 else
@@ -1745,7 +2007,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                 {
                     throw new CamposCreacionIncorrectosException("El nombre no puede estar vacio\n");
                 }
-                else if (!nombreTemp.All(char.IsLetter))
+                else if (!System.Text.RegularExpressions.Regex.IsMatch(nombreTemp, @"^[a-zA-Z\s]+$"))
                 {
                     throw new CamposCreacionIncorrectosException("El nombre debe contener solo letras\n");
                 }
@@ -1895,7 +2157,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
     }
 
     //Utilizado dentro del metodo ModificarInfoCliente
-    private void ModificarInfoClienteInterno(Cliente cliente)
+    private void ModificarInfoClienteInterno(Cliente cliente, string path)
     {
         bool boolMICI = false;
         int opcionNum;
@@ -1925,7 +2187,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                         {
                             throw new ArgumentException("El nombre debe tener 2 o mas letras\n");
                         }
-                        else if (!nombreTemp.All(char.IsLetter))
+                        else if (!System.Text.RegularExpressions.Regex.IsMatch(nombreTemp, @"^[a-zA-Z\s]+$"))// regex para que permita solo letras y espacios
                         {
                             throw new ArgumentException("El nombre debe contener solo letras\n");
                         }
@@ -1946,7 +2208,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                         {
                             throw new ArgumentException("El apellido debe tener 2 o mas letras\n");
                         }
-                        else if (!apellidoTemp.All(char.IsLetter))
+                        else if (!System.Text.RegularExpressions.Regex.IsMatch(apellidoTemp, @"^[a-zA-Z\s]+$"))// regex para que permita solo letras y espacios
                         {
                             throw new ArgumentException("El apellido debe contener solo letras\n");
                         }
@@ -2028,6 +2290,14 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                         Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
                         break;
                 }
+                try
+                {
+                    Program.archivoJSON.EscribirJsonDiccionario < Cliente>(path, clientes);
+                }
+                catch (NotSupportedException e)
+                {
+                    Console.WriteLine(e.Message);
+                }
             }
             catch (SeleccionarOpcionException e)
             {
@@ -2045,7 +2315,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
     }
 
     //Utilizado dentro del metodo ModificarInfoAnimal
-    private void ModificarInfoAnimalInterno(Cliente cliente, Animal animal)
+    private void ModificarInfoAnimalInterno(Cliente cliente, Animal animal, string path)
     {
         int opcionNum = 0;
         bool boolCambiarDueño = false;
@@ -2075,7 +2345,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                         {
                             throw new ArgumentException("El nombre debe tener 2 o mas letras\n");
                         }
-                        else if (!nombreTemp.All(char.IsLetter))
+                        else if (!System.Text.RegularExpressions.Regex.IsMatch(nombreTemp, @"^[a-zA-Z\s]+$"))
                         {
                             throw new ArgumentException("El nombre debe contener solo letras\n");
                         }
@@ -2094,34 +2364,28 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                         {
                             try
                             {
-                                cliente = null;
+                                Cliente nuevoCliente = null;
                                 Console.WriteLine("A continuacion coloca el DNI del nuevo dueño");
-                                cliente = validarCliente(cliente);
-                                if (cliente == null)
+                                nuevoCliente = validarCliente(nuevoCliente);
+                                if (nuevoCliente == null)
                                 {
                                     Console.WriteLine("Volviendo...\n");
                                 }
                                 else
                                 {
-                                    if (cliente == animal.Dueño)
+                                    if (cliente == nuevoCliente)
                                     {
                                         throw new ArgumentException("No podes asignarle el mismo dueño al animal\n");
                                     }
                                     else
                                     {
-                                        // asigno nuevamente el dueño anterior del animal a esta variable
-                                        clienteRemoverAnimal = animal.Dueño;
-
-                                        // cambio el dueño del animal al nuevo dueño
-                                        animal.Dueño = cliente;
-
                                         // elimino el animal de la lista del anterior dueño
-                                        clienteRemoverAnimal.Mascotas.Remove(animal);
+                                        cliente.Mascotas.Remove(animal);
 
                                         // agrego a la lista de mascotas del nuevo dueño, el animal
-                                        cliente.Mascotas.Add(animal);
+                                        nuevoCliente.Mascotas.Add(animal);
 
-                                        Console.WriteLine("El nuevo dueño del animal es: " + cliente.Apellido + ", " + cliente.Nombre + "\n");
+                                        Console.WriteLine("El nuevo dueño del animal es: " + nuevoCliente.Apellido + ", " + nuevoCliente.Nombre + "\n");
                                         boolCambiarDueño = true;
                                     }
                                 }
@@ -2160,6 +2424,14 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                         Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
                         break;
                 }
+                try
+                {
+                    Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                }
+                catch (NotSupportedException e)
+                {
+                    Console.WriteLine(e.Message);
+                }
             }
             catch (SeleccionarOpcionException e)
             {
@@ -2177,7 +2449,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
     }
 
     //Utilizados para modificar el historial de un animal, dentro del metodo ActualizarHistorial
-    private string AgregarConsulta(Cliente cliente, Animal animal)
+    private string AgregarConsulta(Cliente cliente, Animal animal, string path)
     {
         Consulta consulta = null;
         bool boolInterno = false;
@@ -2193,7 +2465,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                 {
                     throw new CamposCreacionIncorrectosException("El motivo de la consulta no puede estar vacio\n");
                 }
-                else if (!motivo.All(char.IsLetter))
+                else if (!System.Text.RegularExpressions.Regex.IsMatch(motivo, @"^[a-zA-Z\s]+$"))// regex para que permita solo letras y espacios
                 {
                     throw new CamposCreacionIncorrectosException("El motivo de la consulta debe contener solo letras\n");
                 }
@@ -2206,8 +2478,16 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                     throw new CamposCreacionIncorrectosException("El diagnostico de la consulta no puede estar vacio\n");
                 }
 
-                consulta = new Consulta(cliente, animal, motivo, diagnostico);
+                consulta = new Consulta(motivo, diagnostico);
                 animal.Historial.Add(consulta);
+                try
+                {
+                    Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                }
+                catch (NotSupportedException e)
+                {
+                    Console.WriteLine(e.Message);
+                }
                 boolInterno = true;
             }
             catch (CamposCreacionIncorrectosException e)
@@ -2226,7 +2506,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return "Consulta creada con exito!\n\n" + consulta.ToString();
     }
 
-    private string EliminarConsulta(Cliente cliente, Animal animal)
+    private string EliminarConsulta(Cliente cliente, Animal animal, string path)
     {
         bool boolInterno = false;
         Consulta consulta;
@@ -2236,26 +2516,43 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
             try
             {
                 Console.WriteLine("---Eliminar consulta---");
-                animal.verHistorial();
-                Console.Write("Coloca el indice de la consulta a eliminar: ");
-                string consultaString = Console.ReadLine().Trim();
-
-                if (!int.TryParse(consultaString, out indiceConsulta))
+                if (animal.Historial.Count == 0)
                 {
-                    throw new ArgumentException("El indice de la consulta no puede estar vacio y debe contener solo numeros\n");
-                }
-                indiceConsulta -= 1;
-                if (indiceConsulta < 0 || indiceConsulta > animal.Historial.Count - 1)
-                {
-                    throw new ArgumentOutOfRangeException("El indice de la consulta que proporcionaste es invalido\n");
+                    return "El animal no tiene consultas registradas en el sistema\n";
                 }
                 else
                 {
-                    consulta = animal.Historial[indiceConsulta];
-                    animal.Historial.RemoveAt(indiceConsulta);
-                    consulta = null;
-                    boolInterno = true;
+                    animal.verHistorial();
+                    Console.Write("Coloca el indice de la consulta a eliminar: ");
+                    string consultaString = Console.ReadLine().Trim();
+                    if (!int.TryParse(consultaString, out indiceConsulta))
+                    {
+                        throw new ArgumentException("El indice de la consulta no puede estar vacio y debe contener solo numeros\n");
+                    }
+                    indiceConsulta -= 1;
+                    if (indiceConsulta < 0 || indiceConsulta > animal.Historial.Count - 1)
+                    {
+                        throw new ArgumentOutOfRangeException("El indice de la consulta que proporcionaste es invalido\n");
+                    }
+                    else
+                    {
+                        consulta = animal.Historial[indiceConsulta];
+                        animal.Historial.RemoveAt(indiceConsulta);
+                        consulta = null;
+
+                        try
+                        {
+                            Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                        }
+                        catch (NotSupportedException e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+
+                        boolInterno = true;
+                    }
                 }
+                
             }
             catch (ArgumentOutOfRangeException e)
             {
@@ -2273,7 +2570,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         return "Consulta eliminada con exito!\n";
     }
 
-    private string VaciarHistorial(Cliente cliente, Animal animal)
+    private string VaciarHistorial(Cliente cliente, Animal animal, string path)
     {
         if (animal.Historial.Count == 0)
         {
@@ -2282,6 +2579,14 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         else
         {
             animal.Historial.Clear();
+            try
+            {
+                Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+            }
+            catch (NotSupportedException e)
+            {
+                Console.WriteLine(e.Message);
+            }
         }
         return "Historial vaciado con exito!\n";
     }
@@ -2300,7 +2605,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         }
     }
 
-    private void AgregarVacuna(object animalCasteado)
+    private void AgregarVacuna(object animalCasteado, string path)
     {
         Gato gato = null;
         Perro perro = null;
@@ -2341,11 +2646,27 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                     if (perro != null) // si es un Perro agregar la vacuna
                     {
                         perro.Vacunas.Add(vacuna);
+                        try
+                        {
+                            Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                        }
+                        catch (NotSupportedException e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
                         Console.WriteLine();
                     }
                     else if (gato != null) // si es un Gato agregar la vacuna
                     {
                         gato.Vacunas.Add(vacuna);
+                        try
+                        {
+                            Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                        }
+                        catch (NotSupportedException e)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
                         Console.WriteLine();
                     }
                     boolAgregarVacuna = true;
@@ -2366,38 +2687,38 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         } while (!boolAgregarVacuna);
     }
 
-    private void EliminarVacuna(object animalCasteado)
+    private void EliminarVacuna(object animalCasteado, string path)
     {
         // verifico si  animalCasteado es Perro o Gato
         if (animalCasteado is Perro perro)
         {
             // Si es Perro, procedemos
-            EliminarVacunaInterno(perro.Vacunas);
+            EliminarVacunaInterno(perro.Vacunas, path);
         }
         else if (animalCasteado is Gato gato)
         {
             // Si es Gato, procedemos
-            EliminarVacunaInterno(gato.Vacunas);
+            EliminarVacunaInterno(gato.Vacunas, path);
         }
     }
 
-    private void ModificarVacuna(object animalCasteado)
+    private void ModificarVacuna(object animalCasteado, string path)
     {
         // verifico si  animalCasteado es Perro o Gato
         if (animalCasteado is Perro perro)
         {
             // Si es Perro, procedemos
-            ModificarVacunaInterno(perro.Vacunas);
+            ModificarVacunaInterno(perro.Vacunas, path);
         }
         else if (animalCasteado is Gato gato)
         {
             // Si es Gato, procedemos
-            ModificarVacunaInterno(gato.Vacunas);
+            ModificarVacunaInterno(gato.Vacunas, path);
         }
     }
 
     //Utilizados dentro de EliminarVacuna y ModificarVacuna
-    private void EliminarVacunaInterno(List<string> vacunas)
+    private void EliminarVacunaInterno(List<string> vacunas, string path)
     {
 
         bool boolEliminarVacuna = false;
@@ -2435,6 +2756,14 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                 else
                 {
                     vacunas.RemoveAt(indiceVacunaNum);
+                    try
+                    {
+                        Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                    }
+                    catch (NotSupportedException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
                     boolEliminarVacuna = true;
                     Console.WriteLine("Vacuna eliminada con exito!\n");
                 }
@@ -2450,7 +2779,7 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
         } while (!boolEliminarVacuna);
     }
 
-    private void ModificarVacunaInterno(List<string> vacunas)
+    private void ModificarVacunaInterno(List<string> vacunas, string path)
     {
         bool boolModificarVacuna = false;
         int indiceVacunaNum;
@@ -2564,6 +2893,14 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
                                     Console.WriteLine("Opcion no valida. Ingresa una opcion valida!\n");
                                     break;
                             }
+                            try
+                            {
+                                Program.archivoJSON.EscribirJsonDiccionario<Cliente>(path, clientes);
+                            }
+                            catch (NotSupportedException e)
+                            {
+                                Console.WriteLine(e.Message);
+                            }
                         }
                         catch (SeleccionarOpcionException e)
                         {
@@ -2591,4 +2928,5 @@ public class Veterinario : Persona, IRegistrosVeterinario, IFacturacion, IConsul
     {
         return "---Informacion Veterinario---" + "\nUsuario: " + usuario + base.ToString() + "\n";
     }
+
 }

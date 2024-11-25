@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 public interface IRegistrosVeterinario
 {
-    public string RegistrarCliente();
-    public string EliminarCliente();
-    public string RegistrarAnimal();
-    public string EliminarAnimal();
+    public string RegistrarCliente(string path);
+    public string EliminarCliente(string path);
+    public string RegistrarAnimal(string path);
+    public string EliminarAnimal(string path);
 }
 

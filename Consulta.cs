@@ -6,31 +6,15 @@ using System.Threading.Tasks;
 
 public class Consulta
 {
-    private Cliente cliente;
-    private Animal animal;
     private DateTime fecha;
     private string motivoConsulta;
     private string diagnostico;
 
-    public Consulta(Cliente cliente, Animal animal, string motivoConsulta, string diagnostico)
+    public Consulta(string motivoConsulta, string diagnostico)
     {
-        this.cliente = cliente;
-        this.animal = animal;
         fecha = DateTime.Now;
         this.motivoConsulta = motivoConsulta;
         this.diagnostico = diagnostico;
-    }
-
-    public Cliente Cliente
-    {
-        get { return cliente; }
-        set { cliente = value; }
-    }
-
-    public Animal Animal
-    {
-        get { return animal; }
-        set { animal = value; }
     }
 
     public DateTime Fecha
@@ -53,8 +37,7 @@ public class Consulta
 
     public override string ToString()
     {
-        return "---Consulta---\n" + "Cliente: " + cliente.Nombre + ", " + cliente.Apellido + " DNI: " +cliente.DNI + "\nAnimal: " + animal.Nombre
-            + "\nFecha: " + fecha + "\nMotivo de la consulta: " + motivoConsulta + "\nDiagnostico: " + diagnostico + "\n";
+        return "---Consulta---" +  "\nFecha: " + fecha + "\nMotivo de la consulta: " + motivoConsulta + "\nDiagnostico: " + diagnostico + "\n";
     }
 
 }
