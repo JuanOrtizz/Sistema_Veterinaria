@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 public abstract class Persona
 {
+
     protected string nombre;
+
     protected string apellido;
+
     protected long numTelefono;
 
     public Persona(string nombre, string apellido, long numTelefono)
