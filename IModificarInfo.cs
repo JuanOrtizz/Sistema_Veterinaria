@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 public interface IModificarInfo
 {
-    public string ModificarInfoCliente();
-    public string ModificarInfoAnimal();
+    public string ModificarInfoCliente(string path);
+    public string ModificarInfoAnimal(string path);
 }
 
